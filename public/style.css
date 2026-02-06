@@ -1,143 +1,220 @@
 :root {
-    --bg-color: #1a1a1a;
-    --card-bg: #2d2d2d;
-    --accent: #6c5ce7;
-    --text: #ffffff;
-    --scenario-bg: #00cec9;
-    --scenario-text: #000;
+    --bg-dark: #0f172a;
+    --bg-card: #1e293b;
+    --primary: #8b5cf6; /* Фиолетовый неон */
+    --accent: #f43f5e;  /* Розовый неон */
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --white: #ffffff;
 }
 
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background-color: var(--bg-color);
+    background-color: var(--bg-dark);
     color: var(--text);
+    font-family: 'Inter', sans-serif;
     margin: 0;
+    overflow-x: hidden;
+}
+
+.app-container {
+    min-height: 100vh;
     display: flex;
     justify-content: center;
-    min-height: 100vh;
+    background: radial-gradient(circle at top, #1e1b4b, var(--bg-dark));
 }
 
 .screen {
     display: none;
     width: 100%;
-    max-width: 800px;
-    padding: 20px;
+    max-width: 600px;
     flex-direction: column;
-    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .screen.active {
     display: flex;
 }
 
-/* Forms */
-.form-container {
+/* --- ТИПОГРАФИКА И КНОПКИ --- */
+h1, h2, h3 { margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+
+.glitch-text {
+    font-size: 3rem;
+    font-weight: 900;
+    text-shadow: 3px 3px 0px var(--primary);
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: var(--accent);
+    font-weight: bold;
+    letter-spacing: 4px;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, var(--primary), var(--accent));
+    border: none;
+    color: white;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    transition: transform 0.2s;
+    width: 100%;
+}
+
+.btn-primary:hover { transform: scale(1.02); }
+.btn-primary:active { transform: scale(0.98); }
+
+input {
+    background: #334155;
+    border: 2px solid #475569;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+    text-align: center;
+}
+
+input:focus { border-color: var(--primary); }
+
+/* --- КАРТОЧКИ И ПАНЕЛИ --- */
+.card-panel {
+    background: var(--bg-card);
+    padding: 30px;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 300px;
-}
-
-input, button {
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    font-size: 16px;
-}
-
-button {
-    background-color: var(--accent);
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    transition: transform 0.1s;
-}
-
-button:active {
-    transform: scale(0.98);
-}
-
-/* Game UI */
-.header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.role-badge {
-    padding: 5px 15px;
-    background: #e17055;
-    border-radius: 20px;
-    font-weight: bold;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    margin-top: 40px;
+    border: 1px solid #334155;
 }
 
 .scenario-card {
-    background: var(--scenario-bg);
-    color: var(--scenario-text);
-    padding: 20px;
-    border-radius: 12px;
-    width: 100%;
+    background: linear-gradient(135deg, #ffffff, #e2e8f0);
+    color: #0f172a;
+    padding: 25px;
+    border-radius: 16px;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    font-size: 1.2rem;
-    margin-bottom: 30px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-size: 1.3rem;
+    font-weight: 800;
+    position: relative;
+    transform: rotate(-1deg);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    border: 4px solid white;
+    margin: 20px 0;
 }
 
-.cards-row {
+.card-label {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: white;
+    padding: 2px 10px;
+    font-size: 0.7rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+}
+
+/* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.badge {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+}
+
+.score-ticker {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.cards-row, .hand-cards {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
+    perspective: 1000px;
 }
 
 .card {
-    width: 120px;
-    height: 180px;
+    width: 100px;
+    height: 140px;
     background: white;
     color: black;
-    border-radius: 8px;
+    border-radius: 10px;
+    padding: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 10px;
-    cursor: pointer;
-    transition: transform 0.2s;
-    border: 3px solid #ccc;
+    font-size: 0.8rem;
     font-weight: bold;
-    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    border: 3px solid #cbd5e1;
+    transition: all 0.3s;
 }
 
+/* Эффект как в дизайне App.tsx */
 .card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
+    transform: translateY(-10px) rotate(2deg);
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary);
 }
 
-.card.selected {
-    border-color: #00b894;
-    background: #e6fffa;
-}
-
-/* Стили для карт на столе */
-.submission-card {
-    background: var(--card-bg);
-    color: white;
-    border: 2px solid white;
-}
-
-.hidden-card {
-    background: #444;
-    color: #666;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-}
-
-#hand-area {
+.hand-wrapper {
     margin-top: auto;
-    width: 100%;
-    border-top: 1px solid #444;
-    padding-top: 20px;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 20px 0;
+    border-top: 1px solid #334155;
+    position: sticky;
+    bottom: 0;
+}
+
+.submission-card {
+    background: var(--bg-card);
+    color: white;
+    border: 2px solid var(--accent);
+}
+
+.players-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.player-item {
+    background: #334155;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
