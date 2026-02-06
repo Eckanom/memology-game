@@ -6,7 +6,7 @@
     --panel-yellow: #ffd700;
     --btn-red: #ff4500;
     --btn-green: #00c853;
-    --btn-blue: #2962ff; /* Ярко-синий для опций */
+    --btn-blue: #2962ff; /* Ярко-синий */
     --card-white: #f0f0f0;
     --border-black: #000000;
 }
@@ -16,14 +16,10 @@ body {
     background-image: radial-gradient(#ffffff 1px, transparent 1px);
     background-size: 20px 20px;
     background-blend-mode: overlay;
-    color: var(--border-black);
     font-family: 'Space Mono', monospace;
     margin: 0;
     height: 100vh;
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     user-select: none;
     -webkit-user-select: none;
 }
@@ -34,18 +30,18 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
 }
 
+/* === ЭКРАНЫ === */
 .screen {
-    display: none;
+    display: none; /* Скрываем неактивные экраны */
     width: 100%;
     height: 100%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10px;
     box-sizing: border-box;
+    padding: 10px;
 }
 
 .screen.active {
@@ -59,10 +55,9 @@ body {
     box-shadow: 10px 10px 0px 0px black;
     padding: 40px 30px;
     width: 100%;
-    max-width: 360px; /* Компактное меню */
+    max-width: 360px;
     transform: rotate(-2deg);
     text-align: center;
-    position: relative;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -74,38 +69,43 @@ body {
     line-height: 0.9;
     margin: 0;
     text-transform: uppercase;
+    color: black;
 }
 
 .subtitle {
     font-size: 0.9rem;
     letter-spacing: 2px;
     text-transform: uppercase;
-    display: block;
-    margin-top: 5px;
+    color: black;
+    font-weight: bold;
 }
 
-.version-tag {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 0.6rem;
-    opacity: 0.5;
-}
-
-/* Поля ввода */
 .input-retro {
     width: 100%;
     padding: 15px;
     border: 3px solid black;
     font-family: 'Space Mono';
     font-size: 1rem;
-    margin-bottom: 15px;
+    font-weight: bold;
+    margin-bottom: 10px;
     box-sizing: border-box;
     text-align: center;
     border-radius: 0;
 }
 
-/* Кнопки */
+.nsfw-toggle-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: bold;
+    color: black;
+}
+.nsfw-toggle-menu input {
+    width: 20px; height: 20px; accent-color: var(--btn-red);
+}
+
+/* КНОПКИ */
 .retro-btn {
     width: 100%;
     padding: 18px;
@@ -122,20 +122,8 @@ body {
 .retro-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px 0px black; }
 
 .btn-start { background: var(--btn-red); }
-.btn-market { background: var(--btn-green); }
-.btn-options { background: var(--btn-blue); } /* СИНЯЯ КНОПКА */
-
-.nsfw-toggle-menu {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    font-weight: bold;
-}
-.nsfw-toggle-menu input {
-    width: 20px; height: 20px; accent-color: var(--btn-red);
-}
+.btn-options { background: var(--btn-blue); } /* СИНЯЯ */
+.btn-green { background: var(--btn-green); }
 
 /* === ЛОББИ === */
 .lobby-card {
@@ -147,27 +135,24 @@ body {
     max-width: 400px;
     text-align: center;
 }
-.room-badge {
+.room-info {
     background: var(--panel-yellow);
     border: 2px solid black;
-    display: inline-block;
-    padding: 5px 10px;
+    padding: 5px;
     font-weight: bold;
     margin: 10px 0;
+    display: inline-block;
 }
 .player-list-container {
     text-align: left;
     margin: 20px 0;
-    max-height: 200px;
-    overflow-y: auto;
+    font-weight: bold;
 }
 
-/* === ИГРА (АДАПТАЦИЯ ПОД 6 ИГРОКОВ) === */
+/* === ИГРА (АДАПТИВНАЯ) === */
 .game-layout {
-    display: flex;
-    flex-direction: column;
     justify-content: space-between;
-    padding: 10px 5px; /* Уменьшил отступы по бокам */
+    padding: 10px 5px;
 }
 
 .game-header {
@@ -180,11 +165,12 @@ body {
     width: 100%;
     box-sizing: border-box;
     font-weight: bold;
-    z-index: 20;
     margin-top: env(safe-area-inset-top);
 }
 
-.round-tag { background: black; color: white; padding: 2px 6px; font-size: 0.8rem; }
+.badge-black { background: black; color: white; padding: 2px 6px; font-size: 0.8rem; }
+.badge-white { font-size: 0.9rem; }
+.role-badge { margin-left: 5px; font-weight: bold; color: var(--btn-blue); }
 
 .scenario-card-modern {
     background: var(--card-white);
@@ -195,21 +181,20 @@ body {
     margin: 10px 0;
     flex-shrink: 0;
 }
-.card-header-purple { background: var(--btn-blue); color: white; padding: 8px; font-weight: bold; font-size: 0.8rem; border-bottom: 3px solid black; }
+.card-header-blue { background: var(--btn-blue); color: white; padding: 8px; font-weight: bold; font-size: 0.8rem; border-bottom: 3px solid black; }
 .card-body-white { padding: 15px; font-size: 0.9rem; font-weight: bold; text-align: center; text-transform: uppercase; min-height: 60px; display: flex; align-items: center; justify-content: center; }
 
-/* Зона стола (куда выкладывают карты) */
+/* СТОЛ (Сетка для 6 карт) */
 .table-area {
     flex: 1;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Центрируем карты */
-    position: relative;
+    justify-content: center;
 }
 
-#status-text {
+.status-badge {
     background: black;
     color: var(--panel-yellow);
     padding: 4px 10px;
@@ -218,74 +203,70 @@ body {
     font-weight: bold;
 }
 
-/* Контейнер карт на столе */
-#submissions-container {
+.submissions-grid {
     display: flex;
-    flex-wrap: wrap;       /* Разрешаем перенос на новую строку */
-    gap: 5px;              /* Маленький отступ */
+    flex-wrap: wrap; /* Разрешаем перенос */
+    gap: 8px;
     justify-content: center;
     width: 100%;
-    max-width: 600px;      /* Ограничение ширины, чтобы не разъезжались */
+    max-width: 600px;
 }
 
-/* === РУКА (НИЗ) === */
+/* Карты на столе (Компактные) */
+.submission-card, .judging-card {
+    width: 70px;
+    height: 100px;
+    background: #111;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border: 2px solid white;
+}
+.judging-card { background: white; color: black; border: 2px solid black; }
+.judging-card img { width: 100%; height: 100%; object-fit: cover; }
+
+/* РУКА ИГРОКА */
 #hand-area {
     width: 100%;
     padding-bottom: env(safe-area-inset-bottom);
-    z-index: 30;
     text-align: center;
+    margin-top: auto;
 }
 .hand-label {
     background: black; color: white; display: inline-block; padding: 2px 8px; font-size: 0.7rem; margin-bottom: 5px;
 }
-
-#my-hand {
+.hand-scroll {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: center; /* Центрируем, если карт мало */
     align-items: flex-end;
     width: 100%;
     overflow-x: auto;
     padding: 10px 0;
 }
 
-/* === КАРТЫ === */
+/* КАРТА В РУКЕ */
 .card {
     background: white;
-    width: 90px;        /* Чуть меньше для мобилок */
+    width: 90px;
     min-width: 90px;
     height: 130px;
     padding: 5px 5px 20px 5px;
     box-sizing: border-box;
     border: 2px solid black;
     box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.4);
-    display: flex; flex-direction: column; align-items: center;
+    margin-right: -15px; /* Наложение */
+    transition: transform 0.2s;
     cursor: pointer;
     position: relative;
-    margin-right: -15px; /* Наложение в руке */
-    transition: transform 0.2s;
 }
 .card:last-child { margin-right: 0; }
+.card:hover, .card:active { transform: translateY(-20px) !important; z-index: 100; border-color: var(--btn-blue); }
 .card img { width: 100%; height: 100%; object-fit: cover; border: 2px solid black; background: #ddd; pointer-events: none; }
 .card::after { content: 'MEME'; position: absolute; bottom: 3px; left: 5px; font-size: 0.5rem; font-weight: bold; opacity: 0.5; }
-.card:active { transform: translateY(-15px) !important; z-index: 100; border-color: var(--btn-blue); }
 
-/* Карты на столе (адаптация под 6 штук) */
-.submission-card, .judging-card {
-    width: 70px;         /* Еще компактнее для стола */
-    height: 100px;
-    margin-right: 0;
-    font-size: 1.5rem;
-}
-.submission-card { background: #111; color: white; display: flex; align-items: center; justify-content: center; }
-
-/* Если карт много (6 игроков), они станут еще чуть меньше */
-@media (max-width: 400px) {
-    .submission-card, .judging-card { width: 60px; height: 90px; }
-}
-
-/* Подиум */
-.podium-place { padding: 10px; margin-bottom: 5px; border: 3px solid black; font-weight: bold; display: flex; justify-content: space-between; color: black; box-shadow: 4px 4px 0 0 black; }
+/* ПОДИУМ */
+.podium-place { padding: 10px; margin-bottom: 5px; border: 3px solid black; font-weight: bold; display: flex; justify-content: space-between; color: black; box-shadow: 4px 4px 0 0 black; background: white; }
 .place-1 { background: #FFD700; }
-.place-2 { background: #C0C0C0; }
-.place-3 { background: #CD7F32; color: white; }
