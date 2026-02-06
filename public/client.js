@@ -1,13 +1,41 @@
 const socket = io();
 
-// Звуки (если файлов нет, ошибок не будет)
+// ГРОМКОСТЬ (0.0 - 1.0)
+let currentVolume = 5; // По умолчанию 5 из 10
+
 const audio = {
     click: new Audio('/sounds/click.mp3'),
     card: new Audio('/sounds/card.mp3'),
     win: new Audio('/sounds/win.mp3')
 };
+
 function playSound(name) {
-    if(audio[name]) { audio[name].currentTime=0; audio[name].play().catch(()=>{}); }
+    if(audio[name]) { 
+        audio[name].currentTime = 0; 
+        // Преобразуем 0-10 в 0.0-1.0
+        audio[name].volume = currentVolume / 10;
+        audio[name].play().catch(()=>{}); 
+    }
+}
+
+// === УПРАВЛЕНИЕ НАСТРОЙКАМИ ===
+function openSettings() {
+    document.getElementById('settings-modal').style.display = 'flex';
+    playSound('click');
+}
+
+function closeSettings() {
+    document.getElementById('settings-modal').style.display = 'none';
+    playSound('click');
+}
+
+function updateVolume(val) {
+    currentVolume = val;
+    document.getElementById('volume-value').innerText = val;
+}
+
+function testSound() {
+    playSound('win');
 }
 
 let myId = '';
@@ -32,7 +60,7 @@ function joinGame() {
     const roomId = document.getElementById('room').value;
     const isNsfw = document.getElementById('nsfw-check').checked;
 
-    if (!username || !roomId) return alert("ENTER NAME & ROOM!");
+    if (!username || !roomId) return alert("ВВЕДИ ИМЯ И КОМНАТУ!");
 
     currentRoomId = roomId;
     socket.emit('joinRoom', { username, roomId, isNsfw });
@@ -49,17 +77,19 @@ socket.on('updatePlayers', (players) => {
     list.innerHTML = players.map(p => 
         `<div style="border-bottom:2px solid black; padding:5px; display:flex; justify-content:space-between; font-weight:bold;">
             <span>${p.username}</span>
-            <span>${p.score} PTS</span>
+            <span>${p.score} 🏆</span>
         </div>`
     ).join('');
 
     const startBtn = document.getElementById('start-btn');
+    const status = document.getElementById('lobby-status-text');
+    
     if (players.length >= 3) {
         startBtn.style.display = 'block';
-        document.getElementById('lobby-status-text').innerText = "READY TO START!";
+        status.innerText = "ГОТОВЫ К СТАРТУ!";
     } else {
         startBtn.style.display = 'none';
-        document.getElementById('lobby-status-text').innerText = `WAITING FOR ${3 - players.length} MORE...`;
+        status.innerText = `ЖДЕМ ЕЩЕ ${3 - players.length} ИГРОКОВ...`;
     }
 });
 
@@ -75,12 +105,12 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
     isJudge = (myId === judgeId);
 
     document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
-    document.getElementById('role-badge').innerText = isJudge ? "JUDGE ⚖️" : "PLAYER 🤡";
+    document.getElementById('role-badge').innerText = isJudge ? "ТЫ СУДЬЯ ⚖️" : "ТЫ ИГРОК 🤡";
     document.getElementById('role-badge').style.color = isJudge ? "var(--btn-green)" : "var(--btn-blue)";
     document.getElementById('scenario-text').innerText = scenario;
     
     document.getElementById('submissions-container').innerHTML = '';
-    document.getElementById('status-text').innerText = isJudge ? "WAITING FOR CARDS..." : "PICK A MEME!";
+    document.getElementById('status-text').innerText = isJudge ? "ЖДЕМ КАРТЫ..." : "ВЫБЕРИ МЕМ!";
 
     const myHandData = hands.find(h => h.id === myId);
     if (myHandData && !isJudge) {
@@ -97,13 +127,12 @@ function renderHand(cards) {
     cards.forEach(imgSrc => {
         const card = document.createElement('div');
         card.className = 'card';
-        // Полароидный стиль
-        card.innerHTML = `<img src="${imgSrc}"><div style="text-align:center; font-size:0.6rem; margin-top:5px; font-weight:bold;">MEME</div>`;
+        card.innerHTML = `<img src="${imgSrc}">`;
         card.onclick = () => {
             if (isJudge) return;
             playSound('click');
             document.getElementById('hand-area').style.display = 'none';
-            document.getElementById('status-text').innerText = "WAITING...";
+            document.getElementById('status-text').innerText = "ЖДЕМ ОСТАЛЬНЫХ...";
             socket.emit('submitCard', { roomId: currentRoomId, card: imgSrc });
         };
         container.appendChild(card);
@@ -115,26 +144,26 @@ socket.on('updateSubmissionsCount', (count) => {
     const container = document.getElementById('submissions-container');
     container.innerHTML = '';
     for(let i=0; i<count; i++) {
-        container.innerHTML += `<div class="card" style="background:black; display:flex; align-items:center; justify-content:center; color:white; font-size:2rem;">?</div>`;
+        container.innerHTML += `<div class="submission-card">?</div>`;
     }
-    if (isJudge) document.getElementById('status-text').innerText = `CARDS: ${count}`;
+    if (isJudge) document.getElementById('status-text').innerText = `СДАНО: ${count}`;
 });
 
 socket.on('gameState', (state) => {
     if (state.state === 'judging') {
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
-        document.getElementById('status-text').innerText = isJudge ? "PICK THE WINNER!" : "JUDGE IS THINKING...";
+        document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : "СУДЬЯ ВЫБИРАЕТ...";
 
         state.submissions.forEach(sub => {
             const card = document.createElement('div');
-            card.className = 'card';
-            card.style.transform = 'scale(1.1)';
+            card.className = 'judging-card';
             card.innerHTML = `<img src="${sub.card}">`;
             
             if (isJudge) {
+                card.style.cursor = 'pointer';
                 card.onclick = () => {
-                    if(confirm("Confirm winner?")) {
+                    if(confirm("Выбрать этот мем?")) {
                         playSound('click');
                         socket.emit('chooseWinner', { roomId: currentRoomId, winnerSocketId: sub.playerId });
                     }
@@ -149,16 +178,14 @@ socket.on('roundResult', ({ winnerName, winningCard, players }) => {
     playSound('win');
     try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
 
-    document.getElementById('status-text').innerHTML = `WINNER: ${winnerName}`;
+    document.getElementById('status-text').innerHTML = `ПОБЕДИТЕЛЬ: ${winnerName}`;
     
-    // Обновление счета
-    const sb = document.getElementById('score-board');
-    // Находим себя
+    // Обновляем счет
     const myPlayer = players.find(p => p.id === myId);
-    if(myPlayer) sb.innerText = `SCORE: ${myPlayer.score}`;
+    if(myPlayer) document.getElementById('score-board').innerText = `СЧЕТ: ${myPlayer.score}`;
 
     const container = document.getElementById('submissions-container');
-    container.innerHTML = `<div class="card" style="transform:scale(1.2); border-color:var(--btn-green);"><img src="${winningCard}"></div>`;
+    container.innerHTML = `<div class="judging-card" style="transform:scale(1.2); border-color:var(--btn-green); width:90px; height:130px;"><img src="${winningCard}"></div>`;
 });
 
 socket.on('gameOver', (sortedPlayers) => {
@@ -167,9 +194,9 @@ socket.on('gameOver', (sortedPlayers) => {
     
     const list = document.getElementById('podium-list');
     list.innerHTML = sortedPlayers.map((p, i) => {
-        let color = i===0 ? 'gold' : i===1 ? 'silver' : '#cd7f32';
-        return `<div style="background:${color}; padding:10px; border:3px solid black; margin-bottom:10px;">
-            #${i+1} ${p.username} - ${p.score}
+        let cls = i===0 ? 'place-1' : '';
+        return `<div class="podium-place ${cls}">
+            #${i+1} ${p.username} <span>${p.score}</span>
         </div>`;
     }).join('');
 });
