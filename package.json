@@ -1,7 +1,7 @@
 {
-  "name": "memology-ultimate",
-  "version": "1.0.0",
-  "description": "Multiplayer Meme Game Ultimate Edition",
+  "name": "memology-ultimate-fixed",
+  "version": "2.0.0",
+  "description": "Meme Game with fix for rounds and NSFW",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
