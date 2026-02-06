@@ -17,7 +17,6 @@ function playSound(name) {
     }
 }
 
-// === УПРАВЛЕНИЕ НАСТРОЙКАМИ ===
 function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
     playSound('click');
@@ -43,13 +42,12 @@ function leaveGame() {
     }
 }
 
-// Отправка настроек на сервер (включая колоды)
 function updateGameSettings() {
     if (!currentRoomId) return; 
     
     const withBots = document.getElementById('bot-check-modal').checked;
     
-    // Собираем все выбранные чекбоксы колод
+    // Собираем колоды
     const deckCheckboxes = document.querySelectorAll('.deck-check:checked');
     const activeDecks = Array.from(deckCheckboxes).map(cb => cb.value);
 
@@ -85,11 +83,9 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
-// Синхронизация галочек в настройках с сервером
 socket.on('syncSettings', (settings) => {
     document.getElementById('bot-check-modal').checked = settings.withBots;
     
-    // Синхронизация колод
     const allChecks = document.querySelectorAll('.deck-check');
     allChecks.forEach(cb => {
         cb.checked = settings.activeDecks.includes(cb.value);
