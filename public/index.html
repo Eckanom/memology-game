@@ -23,6 +23,15 @@
                 <div class="input-group">
                     <input type="text" id="room" placeholder="Номер комнаты (напр. 101)" maxlength="10">
                 </div>
+                
+                <div class="nsfw-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="nsfw-check">
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="nsfw-label">🔞 Режим 18+ (NSFW)</span>
+                </div>
+
                 <button class="btn-primary full-width" onclick="joinGame()">ВОЙТИ</button>
             </div>
         </div>
@@ -31,6 +40,7 @@
             <div class="lobby-card">
                 <div class="lobby-header">
                     <h2>Комната: <span id="room-display" class="highlight-purple">...</span></h2>
+                    <span id="nsfw-badge" style="display:none; color:red; font-weight:bold; border:1px solid red; padding:2px 5px; border-radius:4px;">18+</span>
                 </div>
                 
                 <div class="players-section">
@@ -48,8 +58,12 @@
         <div id="game-screen" class="screen game-layout">
             
             <header class="game-header">
-                <div class="role-indicator" id="role-badge">...</div>
-                <div class="score-panel" id="score-board">Очки: 0</div>
+                <div class="header-left">
+                    <div class="round-indicator" id="round-display">Раунд 1/9</div>
+                    <div class="role-indicator" id="role-badge">...</div>
+                </div>
+                <div class="score-panel" id="score-board">
+                    </div>
             </header>
 
             <main class="game-main">
@@ -72,6 +86,15 @@
                 <div class="hand-header">Твои мемы</div>
                 <div id="my-hand" class="cards-row hand-row"></div>
             </footer>
+        </div>
+
+        <div id="gameover-screen" class="screen centered-screen">
+            <div class="podium-card">
+                <h1>👑 ИГРА ОКОНЧЕНА 👑</h1>
+                <div class="podium-container" id="podium-list">
+                    </div>
+                <button class="btn-primary" onclick="location.reload()">В МЕНЮ</button>
+            </div>
         </div>
 
     </div>
