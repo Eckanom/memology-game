@@ -17,6 +17,7 @@ function playSound(name) {
     }
 }
 
+// === УПРАВЛЕНИЕ НАСТРОЙКАМИ ===
 function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
     playSound('click');
@@ -42,12 +43,13 @@ function leaveGame() {
     }
 }
 
+// Отправка настроек на сервер (включая колоды)
 function updateGameSettings() {
     if (!currentRoomId) return; 
     
     const withBots = document.getElementById('bot-check-modal').checked;
     
-    // Собираем колоды
+    // Собираем все выбранные чекбоксы колод
     const deckCheckboxes = document.querySelectorAll('.deck-check:checked');
     const activeDecks = Array.from(deckCheckboxes).map(cb => cb.value);
 
@@ -83,9 +85,11 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
+// Синхронизация галочек в настройках с сервером
 socket.on('syncSettings', (settings) => {
     document.getElementById('bot-check-modal').checked = settings.withBots;
     
+    // Синхронизация колод
     const allChecks = document.querySelectorAll('.deck-check');
     allChecks.forEach(cb => {
         cb.checked = settings.activeDecks.includes(cb.value);
@@ -125,7 +129,13 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
     isJudge = (myId === judgeId);
 
     document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
-    document.getElementById('role-badge').innerText = isJudge ? "ТЫ СУДЬЯ ⚖️" : "ТЫ ИГРОК 🤡";
+    
+    // Добавлен счетчик игроков в скобках
+    const playerCount = hands.length;
+    document.getElementById('role-badge').innerText = isJudge 
+        ? `ТЫ СУДЬЯ ⚖️ (${playerCount})` 
+        : `ТЫ ИГРОК 🤡 (${playerCount})`;
+        
     document.getElementById('role-badge').style.color = isJudge ? "var(--btn-green)" : "var(--btn-blue)";
     document.getElementById('scenario-text').innerText = scenario;
     
