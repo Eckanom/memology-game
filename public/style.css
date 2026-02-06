@@ -1,220 +1,287 @@
+/* === НАСТРОЙКИ И ЦВЕТА (Как на макете) === */
 :root {
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --primary: #8b5cf6; /* Фиолетовый неон */
-    --accent: #f43f5e;  /* Розовый неон */
-    --text: #f8fafc;
-    --text-muted: #94a3b8;
-    --white: #ffffff;
+    --bg-main: #0a0a0a;         /* Глубокий черный фон */
+    --bg-secondary: #1e1e1e;    /* Фон контейнеров */
+    --primary-purple: #7c4dff;  /* Основной фиолетовый акцент */
+    --purple-hover: #6200ea;
+    --text-primary: #ffffff;    /* Белый текст */
+    --text-secondary: #a0a0a0;  /* Серый текст */
+    --card-white: #ffffff;      /* Цвет игровых карт */
+    --card-text: #1a1a1a;       /* Текст на белых картах */
+    --success: #00c853;         /* Зеленый для победы */
+    --border-radius: 12px;      /* Скругление углов */
 }
 
 body {
-    background-color: var(--bg-dark);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Roboto', sans-serif;
     margin: 0;
-    overflow-x: hidden;
+    padding: 0;
+    min-height: 100vh;
 }
 
 .app-container {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    background: radial-gradient(circle at top, #1e1b4b, var(--bg-dark));
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
+/* Общие стили экранов */
 .screen {
     display: none;
     width: 100%;
-    max-width: 600px;
-    flex-direction: column;
-    padding: 20px;
-    box-sizing: border-box;
+    height: 100%;
 }
 
 .screen.active {
     display: flex;
 }
 
-/* --- ТИПОГРАФИКА И КНОПКИ --- */
-h1, h2, h3 { margin: 0; text-transform: uppercase; letter-spacing: 2px; }
-
-.glitch-text {
-    font-size: 3rem;
-    font-weight: 900;
-    text-shadow: 3px 3px 0px var(--primary);
-    margin-bottom: 5px;
+.centered-screen {
+    justify-content: center;
+    align-items: center;
 }
 
-.subtitle {
-    color: var(--accent);
-    font-weight: bold;
-    letter-spacing: 4px;
-}
+/* === ТИПОГРАФИКА И ИКОНКИ === */
+h1, h2, h3 { margin: 0; font-weight: 700; }
+.subtitle { color: var(--text-secondary); margin-bottom: 25px; }
+.highlight-purple { color: var(--primary-purple); }
+.icon-purple { color: var(--primary-purple); margin-right: 10px; }
+.fa, .fas { margin-right: 8px; }
 
+/* === КНОПКИ И ИНПУТЫ === */
 .btn-primary {
-    background: linear-gradient(45deg, var(--primary), var(--accent));
-    border: none;
+    background-color: var(--primary-purple);
     color: white;
-    padding: 15px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    border-radius: 12px;
+    border: none;
+    padding: 14px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
     cursor: pointer;
+    transition: background 0.2s;
     text-transform: uppercase;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
-    transition: transform 0.2s;
+    letter-spacing: 1px;
+}
+
+.btn-primary:hover { background-color: var(--purple-hover); }
+.btn-primary:active { transform: scale(0.98); }
+.full-width { width: 100%; }
+
+.input-group {
+    background: #2d2d2d;
+    border-radius: var(--border-radius);
+    padding: 5px 15px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    border: 1px solid #404040;
+}
+.input-group i { color: var(--text-secondary); }
+
+input {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    padding: 12px;
+    font-size: 1rem;
+    outline: none;
     width: 100%;
 }
 
-.btn-primary:hover { transform: scale(1.02); }
-.btn-primary:active { transform: scale(0.98); }
-
-input {
-    background: #334155;
-    border: 2px solid #475569;
-    color: white;
-    padding: 15px;
-    border-radius: 10px;
-    font-size: 1rem;
-    outline: none;
+/* === КАРТОЧКИ ВХОДА И ЛОББИ === */
+.login-card, .lobby-card {
+    background: var(--bg-secondary);
+    padding: 40px;
+    border-radius: 24px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     text-align: center;
 }
 
-input:focus { border-color: var(--primary); }
-
-/* --- КАРТОЧКИ И ПАНЕЛИ --- */
-.card-panel {
-    background: var(--bg-card);
-    padding: 30px;
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    margin-top: 40px;
-    border: 1px solid #334155;
-}
-
-.scenario-card {
-    background: linear-gradient(135deg, #ffffff, #e2e8f0);
-    color: #0f172a;
-    padding: 25px;
-    border-radius: 16px;
-    min-height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 1.3rem;
-    font-weight: 800;
-    position: relative;
-    transform: rotate(-1deg);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-    border: 4px solid white;
-    margin: 20px 0;
-}
-
-.card-label {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #000;
-    color: white;
-    padding: 2px 10px;
-    font-size: 0.7rem;
-    border-radius: 10px;
-    text-transform: uppercase;
-}
-
-/* --- ИГРОВЫЕ ЭЛЕМЕНТЫ --- */
-.game-header {
+.lobby-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #333;
 }
 
-.badge {
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-weight: bold;
+.status-badge {
+    background: #333;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.players-list-modern {
+    text-align: left;
+    margin: 20px 0;
+    background: #2d2d2d;
+    border-radius: var(--border-radius);
+    padding: 10px;
+}
+
+.player-item-modern {
+    padding: 12px;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    align-items: center;
+}
+.player-item-modern:last-child { border-bottom: none; }
+.player-avatar { font-size: 1.2rem; margin-right: 15px; }
+.player-score { margin-left: auto; font-weight: bold; color: var(--primary-purple); }
+
+.lobby-footer { margin-top: 30px; }
+#lobby-status-text { color: var(--text-secondary); margin-bottom: 15px; }
+
+/* === ИГРОВОЙ ЭКРАН (СЕТКА) === */
+.game-layout {
+    flex-direction: column;
+    max-width: 900px;
+    margin: auto;
+    height: 100vh;
+    padding-top: 10px;
+}
+
+/* ВЕРХНЯЯ ПАНЕЛЬ */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.role-indicator {
+    font-weight: 700;
     text-transform: uppercase;
+    display: flex;
+    align-items: center;
+}
+
+/* ЦЕНТРАЛЬНАЯ ЗОНА */
+.game-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    overflow-y: auto; /* Чтобы можно было скроллить если карт много */
+    padding-bottom: 20px;
+}
+
+/* Карточка ситуации (Фиолетовый верх, белый низ) */
+.scenario-card-modern {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.card-header-purple {
+    background: var(--primary-purple);
+    color: white;
+    padding: 12px 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+}
+.card-body-white {
+    background: var(--card-white);
+    color: var(--card-text);
+    padding: 25px;
+    font-size: 1.3rem;
+    font-weight: 500;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+}
+
+/* ЗОНА СТОЛА */
+.table-area-modern {
+    flex: 1;
+}
+.table-status {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 15px;
     font-size: 0.9rem;
 }
 
-.score-ticker {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-}
-
-.cards-row, .hand-cards {
+/* СЕТКА КАРТ */
+.cards-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     justify-content: center;
-    perspective: 1000px;
 }
 
+/* СТИЛЬ ИГРОВОЙ КАРТЫ (Белая, чистая) */
 .card {
-    width: 100px;
-    height: 140px;
-    background: white;
-    color: black;
+    width: 120px;
+    height: 170px;
+    background: var(--card-white);
+    color: var(--card-text);
     border-radius: 10px;
     padding: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 0.8rem;
-    font-weight: bold;
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    border: 3px solid #cbd5e1;
-    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Эффект как в дизайне App.tsx */
-.card:hover {
-    transform: translateY(-10px) rotate(2deg);
-    border-color: var(--primary);
-    box-shadow: 0 0 15px var(--primary);
+/* Эффекты наведения для карт в руке */
+.hand-row .card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    border-color: var(--primary-purple);
 }
 
-.hand-wrapper {
-    margin-top: auto;
-    background: rgba(15, 23, 42, 0.9);
-    padding: 20px 0;
-    border-top: 1px solid #334155;
-    position: sticky;
-    bottom: 0;
-}
-
+/* Карта, лежащая на столе (рубашка/закрытая) */
 .submission-card {
-    background: var(--bg-card);
-    color: white;
-    border: 2px solid var(--accent);
+    background: #333; /* Темная рубашка */
+    color: #666;
+    font-size: 2rem; /* Для иконки вопроса */
+    border: 2px solid #444;
+}
+/* Карта на столе, открытая для судейства */
+.judging-card {
+    background: var(--card-white);
+    color: var(--card-text);
+    font-size: 0.85rem;
+}
+/* Подсветка карты при выборе судьей */
+.judging-card:hover {
+    border-color: var(--primary-purple);
+    cursor: pointer;
 }
 
-.players-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin: 20px 0;
-}
 
-.player-item {
-    background: #334155;
-    padding: 10px;
-    border-radius: 8px;
+/* НИЖНЯЯ ПАНЕЛЬ (РУКА) */
+.hand-footer {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 24px 24px 0 0; /* Скругление только сверху */
+    margin: 0 -20px -20px -20px; /* Растянуть на всю ширину */
+    border-top: 1px solid #333;
+}
+.hand-header {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
     text-align: center;
-}
-
-.pulse { animation: pulse 2s infinite; }
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
 }
