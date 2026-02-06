@@ -5,101 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Memeology Ultimate</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
     <div class="app-container">
         
-        <div id="login-screen" class="screen active centered-screen">
-            <div class="login-card">
-                <h1>👾 Мемология</h1>
-                <p class="subtitle">Ultimate Edition</p>
-                <div class="input-group">
-                    <input type="text" id="username" placeholder="Твой никнейм" maxlength="15">
-                </div>
-                <div class="input-group">
-                    <input type="text" id="room" placeholder="Номер комнаты (напр. 101)" maxlength="10">
-                </div>
-                
-                <div class="nsfw-toggle">
-                    <label class="switch">
-                        <input type="checkbox" id="nsfw-check">
-                        <span class="slider round"></span>
-                    </label>
-                    <span class="nsfw-label">🔞 Режим 18+ (NSFW)</span>
+        <div id="login-screen" class="screen active">
+            
+            <div class="menu-panel">
+                <span class="version-tag">v2.1.0</span>
+                <div class="logo-area">
+                    <h1>MEMEOLOGY</h1>
+                    <span class="subtitle">ULTIMATE EDITION</span>
                 </div>
 
-                <button class="btn-primary full-width" onclick="joinGame()">ВОЙТИ</button>
+                <div id="login-form" class="hidden">
+                    <input type="text" id="username" class="input-retro" placeholder="YOUR NICKNAME" maxlength="15">
+                    <input type="text" id="room" class="input-retro" placeholder="ROOM NUMBER" maxlength="10">
+                    
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                        <input type="checkbox" id="nsfw-check" style="width:auto;">
+                        <label for="nsfw-check" style="font-weight:bold;">NSFW 18+</label>
+                    </div>
+
+                    <button class="retro-btn btn-start" onclick="joinGame()">GO!</button>
+                    <button class="retro-btn" style="margin-top:10px; background:#ccc; color:black;" onclick="toggleLogin()">BACK</button>
+                </div>
+
+                <div id="menu-buttons">
+                    <button class="retro-btn btn-start" onclick="toggleLogin()">Start Game</button>
+                    <button class="retro-btn btn-market" style="margin-top:15px;">Market</button>
+                    <button class="retro-btn btn-options" style="margin-top:15px;">Options</button>
+                </div>
+            </div>
+
+            <div class="deck-showcase">
+                <div class="polaroid-card" style="transform: rotate(-3deg);">
+                    <div class="polaroid-image bg-orange">
+                        🖼️
+                    </div>
+                    <div class="polaroid-footer">
+                        <span>CLASSIC</span>
+                        <span class="selected-badge">SELECTED</span>
+                    </div>
+                    <span class="deck-number">#001</span>
+                </div>
+
+                <div class="polaroid-card" style="transform: rotate(3deg);">
+                    <div class="polaroid-image bg-blue">
+                        👾
+                    </div>
+                    <div class="polaroid-footer">
+                        <span>GIFS</span>
+                        <span style="font-size:0.7rem; opacity:0.5;">Select</span>
+                    </div>
+                    <span class="deck-number">#002</span>
+                </div>
             </div>
         </div>
 
-        <div id="lobby-screen" class="screen centered-screen">
+        <div id="lobby-screen" class="screen" style="flex-direction: column;">
             <div class="lobby-card">
-                <div class="lobby-header">
-                    <h2>Комната: <span id="room-display" class="highlight-purple">...</span></h2>
-                    <span id="nsfw-badge" style="display:none; margin-left:10px; color:#ff4444; border:1px solid #ff4444; padding:2px 6px; border-radius:4px; font-size:0.8rem;">18+</span>
+                <h2 style="font-family:'Anton'; font-size:3rem; margin:0;">LOBBY</h2>
+                <div style="background:var(--panel-yellow); border:3px solid black; padding:10px; margin:20px 0; font-weight:bold;">
+                    ROOM: <span id="room-display">...</span>
+                    <span id="nsfw-badge" style="display:none; color:red; margin-left:10px;">[18+]</span>
                 </div>
                 
-                <div class="players-section">
-                    <h3>Игроки онлайн:</h3>
-                    <div id="player-list" class="players-list-modern"></div>
-                </div>
+                <div id="player-list" style="text-align:left; margin-bottom:20px;"></div>
 
-                <div class="lobby-footer">
-                    <p id="lobby-status-text">Нужно минимум 3 игрока...</p>
-                    <button id="start-btn" class="btn-primary full-width" onclick="startGame()" style="display:none;">НАЧАТЬ ИГРУ</button>
-                </div>
+                <p id="lobby-status-text">WAITING FOR PLAYERS...</p>
+                <button id="start-btn" class="retro-btn btn-start" onclick="startGame()" style="display:none;">START ROUND</button>
             </div>
         </div>
 
         <div id="game-screen" class="screen game-layout">
             
-            <header class="game-header">
-                <div class="header-left">
-                    <div class="round-badge" id="round-display">Раунд 1/9</div>
-                    <div class="role-badge" id="role-badge">Загрузка...</div>
+            <div class="game-header">
+                <div>
+                    <span style="background:black; color:white; padding:2px 8px;">ROUND <span id="round-display">1/9</span></span>
+                    <span id="role-badge" style="font-weight:bold; margin-left:10px;">LOADING...</span>
                 </div>
-                <div class="score-panel" id="score-board">
-                    Ожидание счета...
-                </div>
-            </header>
+                <div id="score-board" style="font-weight:bold;">SCORE: 0</div>
+            </div>
 
-            <main class="game-main">
-                <div class="scenario-card-modern">
-                    <div class="card-header-purple">СИТУАЦИЯ</div>
-                    <div class="card-body-white">
-                        <p id="scenario-text">...</p>
-                    </div>
+            <div class="scenario-card-modern">
+                <div class="card-header-purple">SITUATION</div>
+                <div class="card-body-white">
+                    <p id="scenario-text">...</p>
                 </div>
+            </div>
 
-                <div class="table-area-modern">
-                    <div class="table-status">
-                        <span id="status-text">Загрузка...</span>
-                    </div>
-                    <div id="submissions-container" class="cards-row table-row"></div>
-                </div>
-            </main>
+            <div style="flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:20px 0;">
+                <div id="status-text" style="background:black; color:var(--panel-yellow); padding:5px 15px; margin-bottom:15px; font-weight:bold;">WAITING...</div>
+                <div id="submissions-container" style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;"></div>
+            </div>
 
-            <footer id="hand-area" class="hand-footer">
-                <div class="hand-header">Твои мемы</div>
-                <div id="my-hand" class="cards-row hand-row"></div>
-            </footer>
+            <div id="hand-area" style="width:100%;">
+                <div style="background:black; color:white; display:inline-block; padding:2px 10px; margin-bottom:5px;">YOUR CARDS</div>
+                <div id="my-hand" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;"></div>
+            </div>
         </div>
 
-        <div id="gameover-screen" class="screen centered-screen">
-            <div class="podium-card">
-                <h1>👑 ИГРА ОКОНЧЕНА 👑</h1>
-                <div class="podium-container" id="podium-list">
-                    </div>
-                <button class="btn-primary" onclick="location.reload()">В МЕНЮ</button>
+        <div id="gameover-screen" class="screen" style="flex-direction:column;">
+            <div class="lobby-card" style="background:var(--panel-yellow);">
+                <h1 style="font-size:4rem;">GAME OVER</h1>
+                <div id="podium-list" style="margin:30px 0; font-size:1.5rem; font-weight:bold;"></div>
+                <button class="retro-btn btn-start" onclick="location.reload()">MENU</button>
             </div>
         </div>
 
     </div>
 
     <script src="client.js"></script>
+    <script>
+        // Простой скрипт для переключения меню/входа
+        function toggleLogin() {
+            const menu = document.getElementById('menu-buttons');
+            const form = document.getElementById('login-form');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'block';
+                form.style.display = 'none';
+            } else {
+                menu.style.display = 'none';
+                form.style.display = 'block';
+            }
+        }
+    </script>
 </body>
 </html>
