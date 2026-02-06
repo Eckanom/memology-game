@@ -5,8 +5,16 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
+// Настройка CORS для Socket.io (важно для продакшена)
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Раздаем статику из папки public
 app.use(express.static(path.join(__dirname, 'public')));
 
 // === БАЗА ДАННЫХ ВОПРОСОВ ===
@@ -429,7 +437,7 @@ const SCENARIO_DECKS = {
     ]
 };
 
-const TOTAL_IMAGES = 50; 
+const TOTAL_IMAGES = 70; 
 const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.jpg`);
 
 const rooms = {};
@@ -438,8 +446,10 @@ io.on('connection', (socket) => {
     
     socket.on('joinRoom', ({ username, roomId }) => {
         socket.join(roomId);
+        console.log(`[CONNECT] User ${username} (${socket.id}) joined room ${roomId}`);
         
         if (!rooms[roomId]) {
+            console.log(`[ROOM] Created new room: ${roomId}`);
             rooms[roomId] = {
                 players: [],
                 gameState: 'lobby',
@@ -495,7 +505,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ОБНОВЛЕНИЕ НАСТРОЕК (ПЛЮС ДОБАВЛЕНИЕ БОТОВ ПРЯМО В ЛОББИ)
+    // ОБНОВЛЕНИЕ НАСТРОЕК
     socket.on('updateSettings', ({ roomId, withBots, activeDecks }) => {
         const room = rooms[roomId];
         if (room) {
@@ -516,6 +526,8 @@ io.on('connection', (socket) => {
     socket.on('startGame', (roomId) => {
         const room = rooms[roomId];
         if (!room) return;
+        
+        console.log(`[GAME] Started game in room ${roomId}`);
 
         // Если боты включены, но их еще нет (на всякий случай)
         if (room.withBots) ensureMinimumPlayers(room);
@@ -555,6 +567,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
+        console.log(`[DISCONNECT] Socket ${socket.id} disconnected`);
         for (const roomId in rooms) {
             const room = rooms[roomId];
             const playerIndex = room.players.findIndex(p => p.id === socket.id);
@@ -585,9 +598,12 @@ io.on('connection', (socket) => {
 
                 io.to(roomId).emit('updatePlayers', room.players);
                 
-                // Если остались одни боты - удаляем комнату
+                // Если остались одни боты или никого - удаляем комнату
                 const humanCount = room.players.filter(p => !p.isBot).length;
-                if (humanCount === 0) delete rooms[roomId];
+                if (humanCount === 0) {
+                    console.log(`[ROOM] Deleted empty room: ${roomId}`);
+                    delete rooms[roomId];
+                }
             }
         }
     });
@@ -735,4 +751,3 @@ function dealCards(room, count) {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
