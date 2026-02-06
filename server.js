@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// Настройка CORS для стабильности
+// Настройка CORS
 const io = new Server(server, {
     cors: {
         origin: "*",
@@ -438,6 +438,7 @@ const SCENARIO_DECKS = {
 
 const TOTAL_IMAGES = 50; 
 const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.jpg`);
+const TURN_TIMER_SECONDS = 30; // Время на ход
 
 const rooms = {};
 
@@ -461,13 +462,14 @@ io.on('connection', (socket) => {
                 submissions: [],
                 usedScenarios: [],
                 deck: [...MEME_CARDS].sort(() => Math.random() - 0.5),
-                createdAt: Date.now(), // Метка времени создания
-                lastActive: Date.now() // Метка последней активности
+                createdAt: Date.now(),
+                lastActive: Date.now(),
+                timer: null // Хранилище для таймера
             };
         }
 
         const room = rooms[roomId];
-        room.lastActive = Date.now(); // Обновляем активность
+        room.lastActive = Date.now();
         
         const existingPlayer = room.players.find(p => p.id === socket.id);
         
@@ -538,7 +540,7 @@ io.on('connection', (socket) => {
     socket.on('submitCard', ({ roomId, card }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'selection') return;
-        room.lastActive = Date.now(); // Обновляем активность
+        room.lastActive = Date.now();
         
         if (room.submissions.find(s => s.playerId === socket.id)) return;
 
@@ -551,6 +553,8 @@ io.on('connection', (socket) => {
         if (!room || room.gameState !== 'judging') return;
         room.lastActive = Date.now();
         
+        clearTimeout(room.timer); // Останавливаем таймер
+
         room.submissions.forEach(sub => {
             const player = room.players.find(p => p.id === sub.playerId);
             if (player) player.score += 1;
@@ -563,6 +567,8 @@ io.on('connection', (socket) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'judging') return;
         room.lastActive = Date.now();
+        
+        clearTimeout(room.timer); // Останавливаем таймер
         resolveWinner(roomId, winnerSocketId);
     });
 
@@ -598,6 +604,7 @@ io.on('connection', (socket) => {
                 const humanCount = room.players.filter(p => !p.isBot).length;
                 if (humanCount === 0) {
                     console.log(`[ROOM] Deleted empty room: ${roomId}`);
+                    clearTimeout(room.timer); // Важно: очищаем таймер при удалении
                     delete rooms[roomId];
                 }
             }
@@ -605,9 +612,9 @@ io.on('connection', (socket) => {
     });
 });
 
-// === АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕША (РАЗ В ЧАС) ===
-const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 час
-const MAX_ROOM_LIFETIME = 2 * 60 * 60 * 1000; // 2 часа макс. жизнь комнаты без активности
+// === АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕША ===
+const CLEANUP_INTERVAL = 60 * 60 * 1000; 
+const MAX_ROOM_LIFETIME = 2 * 60 * 60 * 1000; 
 
 setInterval(() => {
     console.log('[MAINTENANCE] Запуск очистки старых комнат...');
@@ -616,33 +623,75 @@ setInterval(() => {
 
     for (const roomId in rooms) {
         const room = rooms[roomId];
-        
-        // Удаляем комнату, если в ней только боты
         const humanCount = room.players.filter(p => !p.isBot).length;
-        
-        // Удаляем, если комната не активна уже долго
         const isInactive = (now - room.lastActive) > MAX_ROOM_LIFETIME;
 
         if (humanCount === 0 || isInactive) {
+            clearTimeout(room.timer); // Очищаем таймер перед удалением
             delete rooms[roomId];
             deletedCount++;
         }
     }
-    
-    // Если нужно ЖЕСТКО очистить ВООБЩЕ ВСЁ (удалить даже активные игры):
-    // раскомментируй строку ниже, но игроки вылетят.
-    // if (deletedCount === 0) process.exit(0); 
-
     console.log(`[MAINTENANCE] Очистка завершена. Удалено комнат: ${deletedCount}`);
-    
-    // Принудительный вызов сборщика мусора JS (если доступен), обычно не требуется, но для надежности:
-    if (global.gc) {
-        global.gc();
-    }
+    if (global.gc) global.gc();
 }, CLEANUP_INTERVAL);
 
 
 // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+
+function startRoundTimer(roomId, isJudgingPhase = false) {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    if (room.timer) clearTimeout(room.timer);
+
+    // Уведомляем клиентов о начале таймера
+    io.to(roomId).emit('timerStart', { duration: TURN_TIMER_SECONDS });
+
+    room.timer = setTimeout(() => {
+        if (isJudgingPhase) {
+            handleJudgingTimeout(roomId);
+        } else {
+            handleSelectionTimeout(roomId);
+        }
+    }, TURN_TIMER_SECONDS * 1000);
+}
+
+// Если время вышло на этапе ВЫБОРА карт
+function handleSelectionTimeout(roomId) {
+    const room = rooms[roomId];
+    if (!room || room.gameState !== 'selection') return;
+
+    const judgeId = room.players[room.currentJudgeIndex].id;
+    
+    // Проходим по всем игрокам, кто еще не сдал карту (и не судья)
+    room.players.forEach(player => {
+        if (player.id !== judgeId && !room.submissions.find(s => s.playerId === player.id)) {
+            // Берем случайную карту из руки
+            if (player.hand.length > 0) {
+                const randomCard = player.hand[Math.floor(Math.random() * player.hand.length)];
+                processSubmission(room, player.id, randomCard);
+            }
+        }
+    });
+    
+    checkRoundEnd(roomId);
+}
+
+// Если время вышло на этапе СУДЕЙСТВА
+function handleJudgingTimeout(roomId) {
+    const room = rooms[roomId];
+    if (!room || room.gameState !== 'judging') return;
+
+    if (room.submissions.length > 0) {
+        // Выбираем случайного победителя
+        const randomSub = room.submissions[Math.floor(Math.random() * room.submissions.length)];
+        resolveWinner(roomId, randomSub.playerId);
+    } else {
+        // Если вообще нет карт (странно, но возможно) - просто завершаем раунд без победителя
+        finishRound(roomId, 'Время вышло', null, true);
+    }
+}
 
 function ensureMinimumPlayers(room) {
     let botCounter = 1;
@@ -670,7 +719,10 @@ function processSubmission(room, playerId, card) {
 
 function checkRoundEnd(roomId) {
     const room = rooms[roomId];
+    // Все игроки (кроме судьи) сдали карты
     if (room.submissions.length === room.players.length - 1) {
+        clearTimeout(room.timer); // Останавливаем таймер выбора
+
         room.gameState = 'judging';
         const judge = room.players[room.currentJudgeIndex];
         
@@ -680,6 +732,9 @@ function checkRoundEnd(roomId) {
             submissions: room.submissions,
             judge: judge.username
         });
+        
+        // Запускаем таймер для судьи
+        startRoundTimer(roomId, true);
 
         if (judge.isBot) {
             setTimeout(() => {
@@ -696,6 +751,8 @@ function checkRoundEnd(roomId) {
 
 function resolveWinner(roomId, winnerId) {
     const room = rooms[roomId];
+    if (room.timer) clearTimeout(room.timer); // Точно останавливаем
+    
     const winner = room.players.find(p => p.id === winnerId);
     if (winner) winner.score += 1;
     const winCard = room.submissions.find(s => s.playerId === winnerId)?.card;
@@ -705,6 +762,8 @@ function resolveWinner(roomId, winnerId) {
 function finishRound(roomId, winnerName, winCard, isDraw) {
     const room = rooms[roomId];
     room.gameState = 'result';
+    
+    // Скрываем таймер на клиенте (отправляя 0 или спец событие, но просто начало нового раунда сбросит его)
     io.to(roomId).emit('roundResult', { winnerName, winningCard: winCard, players: room.players, isDraw });
 
     setTimeout(() => {
@@ -749,6 +808,9 @@ function startRound(roomId) {
         scenario: room.currentScenario,
         hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
     });
+
+    // ЗАПУСК ТАЙМЕРА РАУНДА
+    startRoundTimer(roomId, false);
 
     if (room.withBots) {
         room.players.forEach(p => {
