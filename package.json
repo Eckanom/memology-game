@@ -1,10 +1,13 @@
 {
   "name": "memology-ultimate-fixed",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Meme Game with fix for rounds and NSFW",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "express": "^4.18.2",
