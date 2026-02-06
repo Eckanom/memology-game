@@ -9,7 +9,7 @@ const io = new Server(server);
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === БАЗА ВОПРОСОВ (50+ шт) ===
+// === КОНТЕНТ ===
 const SCENARIOS_NORMAL = [
     "Твое лицо, когда открыл холодильник, а там пусто, хотя проверял 5 минут назад",
     "Когда пытаешься тихо открыть упаковку чипсов ночью, но она гремит как взрыв",
@@ -103,7 +103,6 @@ const rooms = {};
 
 io.on('connection', (socket) => {
     
-    // ВХОД В КОМНАТУ
     socket.on('joinRoom', ({ username, roomId }) => {
         socket.join(roomId);
         
@@ -115,11 +114,11 @@ io.on('connection', (socket) => {
                 currentScenario: '',
                 currentRound: 0, 
                 maxRounds: 9,
-                isNsfw: false, // Теперь меняется в опциях
-                withBots: false, // Теперь меняется в опциях
+                isNsfw: false,
+                withBots: false,
                 submissions: [],
                 usedScenarios: [],
-                deck: [...MEME_CARDS].sort(() => Math.random() - 0.5) // Уникальная колода для комнаты
+                deck: [...MEME_CARDS].sort(() => Math.random() - 0.5)
             };
         }
 
@@ -132,18 +131,16 @@ io.on('connection', (socket) => {
                 username,
                 score: 0,
                 isBot: false,
-                hand: dealCards(room, 5) // Сдаем 5 карт
+                hand: dealCards(room, 5)
             });
         }
 
         io.to(roomId).emit('updatePlayers', room.players);
-        // Отправляем текущие настройки комнаты новому игроку
         socket.emit('syncSettings', { isNsfw: room.isNsfw, withBots: room.withBots });
 
-        // === ПУНКТ 2: ПОДКЛЮЧЕНИЕ К ИГРЕ В ПРОЦЕССЕ ===
+        // Подключение к уже идущей игре
         if (room.gameState !== 'lobby') {
             const judge = room.players[room.currentJudgeIndex];
-            // Отправляем новому игроку состояние раунда
             socket.emit('newRound', {
                 roundNumber: room.currentRound,
                 totalRounds: room.maxRounds,
@@ -152,8 +149,6 @@ io.on('connection', (socket) => {
                 scenario: room.currentScenario,
                 hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
             });
-            
-            // Если сейчас голосование, показываем карты на столе
             if (room.submissions.length > 0) {
                 socket.emit('updateSubmissionsCount', room.submissions.length);
             }
@@ -168,7 +163,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ОБНОВЛЕНИЕ НАСТРОЕК (NSFW, БОТЫ)
     socket.on('updateSettings', ({ roomId, isNsfw, withBots }) => {
         const room = rooms[roomId];
         if (room) {
@@ -182,19 +176,19 @@ io.on('connection', (socket) => {
         const room = rooms[roomId];
         if (!room) return;
 
-        // === ДОБАВЛЕНИЕ БОТОВ ===
+        // === ДОБАВЛЯЕМ БОТОВ (ЧТОБЫ БЫЛО 4 ИГРОКА) ===
         if (room.withBots) {
-            // Добавляем ботов, пока игроков не станет хотя бы 3 (или больше)
-            let botCount = 1;
-            while (room.players.length < 4) {
+            const targetPlayers = 4; // Цель: 4 игрока за столом
+            let botCounter = 1;
+            while (room.players.length < targetPlayers) {
                 room.players.push({
-                    id: `bot-${Date.now()}-${botCount}`,
-                    username: `Bot ${botCount}`,
+                    id: `bot-${Date.now()}-${botCounter}`,
+                    username: `Бот ${botCounter}`,
                     score: 0,
                     isBot: true,
                     hand: dealCards(room, 5)
                 });
-                botCount++;
+                botCounter++;
             }
             io.to(roomId).emit('updatePlayers', room.players);
         }
@@ -211,78 +205,63 @@ io.on('connection', (socket) => {
         if (!room || room.gameState !== 'selection') return;
         if (room.submissions.find(s => s.playerId === socket.id)) return;
 
-        room.submissions.push({
-            playerId: socket.id,
-            card: card,
-            username: room.players.find(p => p.id === socket.id).username
-        });
-
-        const player = room.players.find(p => p.id === socket.id);
-        if (player) {
-            player.hand = player.hand.filter(c => c !== card);
-            // === ПУНКТ 1: ВЫДАЕМ НОВУЮ КАРТУ, ЧТОБЫ БЫЛО 5 ===
-            const newCards = dealCards(room, 1);
-            if (newCards.length > 0) player.hand.push(newCards[0]);
-        }
-
+        processSubmission(room, socket.id, card);
         checkRoundEnd(roomId);
     });
 
-    // === ПУНКТ 3: НИЧЬЯ ===
     socket.on('declareDraw', ({ roomId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'judging') return;
-
-        // Даем очко ВСЕМ, кто положил карту
+        
+        // Всем по очку
         room.submissions.forEach(sub => {
             const player = room.players.find(p => p.id === sub.playerId);
             if (player) player.score += 1;
         });
 
-        room.gameState = 'result';
-        io.to(roomId).emit('roundResult', {
-            winnerName: 'ДРУЖБА (НИЧЬЯ)',
-            winningCard: '/memes/1.jpg', // Заглушка, можно любую
-            players: room.players,
-            isDraw: true // Флаг для клиента
-        });
-
-        nextRoundWithDelay(roomId);
+        finishRound(roomId, 'ДРУЖБА (НИЧЬЯ)', '/memes/1.jpg', true);
     });
 
     socket.on('chooseWinner', ({ roomId, winnerSocketId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'judging') return;
-
-        const winner = room.players.find(p => p.id === winnerSocketId);
-        if (winner) winner.score += 1;
-
-        room.gameState = 'result';
-        io.to(roomId).emit('roundResult', {
-            winnerName: winner ? winner.username : 'Никто',
-            winningCard: room.submissions.find(s => s.playerId === winnerSocketId)?.card,
-            players: room.players,
-            isDraw: false
-        });
-
-        nextRoundWithDelay(roomId);
+        resolveWinner(roomId, winnerSocketId);
     });
 
     socket.on('disconnect', () => {
         for (const roomId in rooms) {
             const room = rooms[roomId];
-            room.players = room.players.filter(p => p.id !== socket.id);
+            room.players = room.players.filter(p => p.id !== socket.id); // Удаляем вышедшего
             io.to(roomId).emit('updatePlayers', room.players);
-            if (room.players.length === 0) delete rooms[roomId];
+            
+            // Если остались только боты - удаляем комнату
+            const humanCount = room.players.filter(p => !p.isBot).length;
+            if (humanCount === 0) delete rooms[roomId];
         }
     });
 });
 
+// === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+
+function processSubmission(room, playerId, card) {
+    const player = room.players.find(p => p.id === playerId);
+    if (!player) return;
+
+    room.submissions.push({
+        playerId: player.id,
+        card: card,
+        username: player.username
+    });
+
+    // Убираем карту и даем новую
+    player.hand = player.hand.filter(c => c !== card);
+    const newCards = dealCards(room, 1);
+    if (newCards.length > 0) player.hand.push(newCards[0]);
+}
+
 function checkRoundEnd(roomId) {
     const room = rooms[roomId];
-    // Считаем только живых людей, боты ходят мгновенно (симуляция ниже)
-    // Но для простоты считаем submissions.length === players.length - 1 (минус судья)
-    
+    // Ждем, пока все КРОМЕ СУДЬИ положат карты
     if (room.submissions.length === room.players.length - 1) {
         room.gameState = 'judging';
         io.to(roomId).emit('gameState', {
@@ -291,9 +270,53 @@ function checkRoundEnd(roomId) {
             submissions: room.submissions,
             judge: room.players[room.currentJudgeIndex].username
         });
+
+        // === ЕСЛИ СУДЬЯ - БОТ ===
+        const judge = room.players[room.currentJudgeIndex];
+        if (judge.isBot) {
+            setTimeout(() => {
+                // Бот выбирает случайного победителя
+                if (room.submissions.length > 0) {
+                    const randomSub = room.submissions[Math.floor(Math.random() * room.submissions.length)];
+                    resolveWinner(roomId, randomSub.playerId);
+                }
+            }, 3000); // Бот думает 3 секунды
+        }
+
     } else {
         io.to(roomId).emit('updateSubmissionsCount', room.submissions.length);
     }
+}
+
+function resolveWinner(roomId, winnerId) {
+    const room = rooms[roomId];
+    const winner = room.players.find(p => p.id === winnerId);
+    if (winner) winner.score += 1;
+
+    const winCard = room.submissions.find(s => s.playerId === winnerId)?.card;
+    finishRound(roomId, winner ? winner.username : 'Никто', winCard, false);
+}
+
+function finishRound(roomId, winnerName, winCard, isDraw) {
+    const room = rooms[roomId];
+    room.gameState = 'result';
+    
+    io.to(roomId).emit('roundResult', {
+        winnerName: winnerName,
+        winningCard: winCard,
+        players: room.players,
+        isDraw: isDraw
+    });
+
+    setTimeout(() => {
+        if (room.currentRound >= room.maxRounds) {
+            const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
+            io.to(roomId).emit('gameOver', sortedPlayers);
+        } else {
+            room.currentJudgeIndex = (room.currentJudgeIndex + 1) % room.players.length;
+            startRound(roomId);
+        }
+    }, 5000);
 }
 
 function startRound(roomId) {
@@ -324,55 +347,30 @@ function startRound(roomId) {
         hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
     });
 
-    // === ЛОГИКА БОТОВ ===
-    // Если есть боты, и они не судьи, они должны походить
+    // === ЕСЛИ ЕСТЬ БОТЫ-ИГРОКИ (НЕ СУДЬИ) ===
     if (room.withBots) {
-        setTimeout(() => {
-            room.players.forEach(p => {
-                if (p.isBot && p.id !== judge.id) {
-                    // Бот выбирает случайную карту
+        room.players.forEach(p => {
+            if (p.isBot && p.id !== judge.id) {
+                // Имитация разного времени обдумывания (от 2 до 5 секунд)
+                const delay = 2000 + Math.random() * 3000;
+                setTimeout(() => {
+                    // Бот выбирает случайную карту из руки
                     const randomCard = p.hand[Math.floor(Math.random() * p.hand.length)];
-                    
-                    // Бот "кладет" карту (логика дублируется из submitCard, но внутри сервера)
-                    if (!room.submissions.find(s => s.playerId === p.id)) {
-                        room.submissions.push({
-                            playerId: p.id,
-                            card: randomCard,
-                            username: p.username
-                        });
-                        // Обновляем руку бота
-                        p.hand = p.hand.filter(c => c !== randomCard);
-                        const newCards = dealCards(room, 1);
-                        if(newCards.length > 0) p.hand.push(newCards[0]);
+                    // Проверяем, не перешли ли уже к судейству (вдруг все уже походили)
+                    if (room.gameState === 'selection') {
+                        processSubmission(room, p.id, randomCard);
+                        checkRoundEnd(roomId);
                     }
-                }
-            });
-            // Проверяем, все ли походили после хода ботов
-            checkRoundEnd(roomId);
-        }, 2000 + Math.random() * 2000); // Боты ходят через 2-4 секунды
+                }, delay);
+            }
+        });
     }
 }
 
-function nextRoundWithDelay(roomId) {
-    const room = rooms[roomId];
-    setTimeout(() => {
-        if (room.currentRound >= room.maxRounds) {
-            const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
-            io.to(roomId).emit('gameOver', sortedPlayers);
-            // Не удаляем комнату сразу, чтобы люди могли выйти сами
-        } else {
-            room.currentJudgeIndex = (room.currentJudgeIndex + 1) % room.players.length;
-            startRound(roomId);
-        }
-    }, 5000);
-}
-
-// === УМНАЯ РАЗДАЧА КАРТ ===
 function dealCards(room, count) {
     const cards = [];
     for (let i = 0; i < count; i++) {
         if (room.deck.length === 0) {
-            // Если колода кончилась, пересоздаем (можно добавить логику сброса, но пока просто все карты заново)
             room.deck = [...MEME_CARDS].sort(() => Math.random() - 0.5);
         }
         if (room.deck.length > 0) cards.push(room.deck.pop());
