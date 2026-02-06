@@ -19,25 +19,27 @@ function showScreen(name) {
 function joinGame() {
     const username = document.getElementById('username').value;
     const roomId = document.getElementById('room').value;
-    const isNsfw = document.getElementById('nsfw-check').checked; // Читаем чекбокс
+    const isNsfw = document.getElementById('nsfw-check').checked;
 
     if (!username || !roomId) return alert("Введи имя и номер комнаты!");
 
     currentRoomId = roomId;
-    socket.emit('joinRoom', { username, roomId, isNsfw }); // Отправляем настройки
+    socket.emit('joinRoom', { username, roomId, isNsfw });
     showScreen('lobby');
     document.getElementById('room-display').innerText = roomId;
 }
 
-// Показываем значок 18+, если комната NSFW
+// Отображение значка 18+ в лобби
 socket.on('roomSettings', (settings) => {
+    const badge = document.getElementById('nsfw-badge');
     if (settings.isNsfw) {
-        document.getElementById('nsfw-badge').style.display = 'inline-block';
+        badge.style.display = 'inline-block';
+    } else {
+        badge.style.display = 'none';
     }
 });
 
 socket.on('updatePlayers', (players) => {
-    // Обновляем список в Лобби
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
         `<div class="player-item-modern">
@@ -46,14 +48,15 @@ socket.on('updatePlayers', (players) => {
         </div>`
     ).join('');
 
-    // Обновляем кнопку старта
     const startBtn = document.getElementById('start-btn');
+    const status = document.getElementById('lobby-status-text');
+    
     if (players.length >= 3) {
         startBtn.style.display = 'block';
-        document.getElementById('lobby-status-text').innerText = "Все готовы!";
+        status.innerHTML = '<span style="color:var(--success)">Все готовы!</span>';
     } else {
         startBtn.style.display = 'none';
-        document.getElementById('lobby-status-text').innerText = `Ждем еще ${3 - players.length}...`;
+        status.innerText = `Нужно еще ${3 - players.length} игрока...`;
     }
 });
 
@@ -61,30 +64,30 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-// === НАЧАЛО РАУНДА ===
+// === НОВЫЙ РАУНД ===
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, judgeName, scenario, hands }) => {
     showScreen('game');
     myId = socket.id;
     isJudge = (myId === judgeId);
 
-    // Обновляем номер раунда
+    // ОБНОВЛЕНИЕ НОМЕРА РАУНДА (Исправление бага)
     document.getElementById('round-display').innerText = `Раунд ${roundNumber} / ${totalRounds}`;
 
-    // Обновляем роль
+    // ОБНОВЛЕНИЕ РОЛИ
     const badge = document.getElementById('role-badge');
     badge.innerHTML = isJudge 
         ? '<i class="fas fa-gavel"></i> ТЫ СУДЬЯ' 
         : '<i class="fas fa-user"></i> ТЫ ИГРОК';
     badge.style.color = isJudge ? "var(--success)" : "var(--primary-purple)";
 
-    // Сценарий
+    // СЦЕНАРИЙ
     document.getElementById('scenario-text').innerText = scenario;
     
-    // Очистка стола
+    // СТОЛ И СТАТУС
     document.getElementById('submissions-container').innerHTML = '';
-    document.getElementById('status-text').innerText = isJudge ? "Игроки выбирают..." : "Выбери мем!";
+    document.getElementById('status-text').innerText = isJudge ? "Игроки выбирают мемы..." : "Выбери мем!";
 
-    // Показываем руку (только если не судья)
+    // РУКА
     const myHandData = hands.find(h => h.id === myId);
     if (myHandData && !isJudge) {
         renderHand(myHandData.hand);
@@ -94,7 +97,6 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, judgeName, scenario,
     }
 });
 
-// === ОТРИСОВКА РУКИ ===
 function renderHand(cards) {
     const container = document.getElementById('my-hand');
     container.innerHTML = '';
@@ -118,7 +120,6 @@ function submitCard(imgSrc) {
 
 socket.on('updateSubmissionsCount', (count) => {
     if (isJudge) document.getElementById('status-text').innerText = `Сдано карт: ${count}`;
-    
     const container = document.getElementById('submissions-container');
     container.innerHTML = '';
     for(let i=0; i<count; i++) {
@@ -126,12 +127,11 @@ socket.on('updateSubmissionsCount', (count) => {
     }
 });
 
-// === СУДЕЙСТВО ===
 socket.on('gameState', (state) => {
     if (state.state === 'judging') {
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
-        document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ!" : `Судья ${state.judge} думает...`;
+        document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : `Судья ${state.judge} думает...`;
 
         state.submissions.forEach(sub => {
             const card = document.createElement('div');
@@ -142,7 +142,7 @@ socket.on('gameState', (state) => {
             
             if (isJudge) {
                 card.onclick = () => {
-                    if(confirm("Выбрать победителя?")) {
+                    if(confirm("Выбрать этот мем?")) {
                         socket.emit('chooseWinner', { roomId: currentRoomId, winnerSocketId: sub.playerId });
                     }
                 };
@@ -152,35 +152,46 @@ socket.on('gameState', (state) => {
     }
 });
 
-// === РЕЗУЛЬТАТЫ РАУНДА ===
 socket.on('roundResult', ({ winnerName, winningCard, players }) => {
     const status = document.getElementById('status-text');
-    status.innerHTML = `<span style="color:var(--success)">🏆 ${winnerName} +1</span>`;
+    status.innerHTML = `<span style="color:var(--success); font-weight:bold">🏆 ${winnerName} +1</span>`;
     
-    // Обновляем верхнее табло (Топ-3)
+    // Обновляем Табло Лидеров
+    updateScoreboard(players);
+
+    // Показываем победивший мем
+    const container = document.getElementById('submissions-container');
+    container.innerHTML = `
+        <div class="card judging-card" style="width:160px; height:220px; transform:scale(1.1); border-color:var(--success)">
+            <img src="${winningCard}">
+        </div>`;
+});
+
+function updateScoreboard(players) {
     const sorted = [...players].sort((a,b) => b.score - a.score);
     const sb = document.getElementById('score-board');
+    // Показываем топ-3
     sb.innerHTML = sorted.slice(0, 3).map((p, i) => 
         `<div class="mini-score ${i===0?'leader':''}">${p.username}: ${p.score}</div>`
     ).join('');
-});
+}
 
-// === КОНЕЦ ИГРЫ (ПОДИУМ) ===
+// === КОНЕЦ ИГРЫ ===
 socket.on('gameOver', (sortedPlayers) => {
     showScreen('gameover');
     const container = document.getElementById('podium-list');
-    
     let html = '';
+    
     sortedPlayers.forEach((p, index) => {
         let placeClass = 'place-rest';
         let icon = '';
         if (index === 0) { placeClass = 'place-1'; icon = '👑'; }
-        if (index === 1) { placeClass = 'place-2'; icon = '🥈'; }
-        if (index === 2) { placeClass = 'place-3'; icon = '🥉'; }
+        else if (index === 1) { placeClass = 'place-2'; icon = '🥈'; }
+        else if (index === 2) { placeClass = 'place-3'; icon = '🥉'; }
         
         html += `
         <div class="podium-place ${placeClass}">
-            <span>${icon} ${index + 1}. ${p.username}</span>
+            <span>${icon} ${index+1}. ${p.username}</span>
             <span>${p.score} очков</span>
         </div>`;
     });
