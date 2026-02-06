@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мемология MVP</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+    <div id="login-screen" class="screen active">
+        <h1>😂 Мемология</h1>
+        <div class="form-container">
+            <input type="text" id="username" placeholder="Твое имя" maxlength="15">
+            <input type="text" id="room" placeholder="ID Комнаты (напр. 'mem1')" maxlength="10">
+            <button onclick="joinGame()">Войти</button>
+        </div>
+    </div>
+
+    <div id="lobby-screen" class="screen">
+        <h2>Комната: <span id="room-display"></span></h2>
+        <div id="player-list"></div>
+        <p class="status">Ожидание игроков (минимум 3)...</p>
+        <button id="start-btn" onclick="startGame()" style="display:none;">Начать игру</button>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div class="header">
+            <div class="role-badge" id="role-badge">Игрок</div>
+            <div class="score-board" id="score-board"></div>
+        </div>
+
+        <div class="scenario-card">
+            <h3>СИТУАЦИЯ:</h3>
+            <p id="scenario-text">Загрузка...</p>
+        </div>
+
+        <div id="game-area">
+            <div class="table-area">
+                <p id="status-text">Ожидание хода игроков...</p>
+                <div id="submissions-container" class="cards-row"></div>
+            </div>
+
+            <div id="hand-area">
+                <p>Твои карты:</p>
+                <div id="my-hand" class="cards-row"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="client.js"></script>
+</body>
+</html>
