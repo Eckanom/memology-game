@@ -36,16 +36,12 @@
                 <div class="room-info">
                     КОМНАТА: <span id="room-display">...</span>
                 </div>
-                <div style="margin-bottom:10px;">
-                     <span id="nsfw-badge" style="display:none; color:red; font-weight:bold; border:1px solid red; padding:2px;">18+</span>
-                     <span id="bot-badge" style="display:none; color:blue; font-weight:bold; border:1px solid blue; padding:2px;">БОТЫ</span>
-                </div>
                 
                 <div id="player-list" class="player-list-container"></div>
 
                 <p id="lobby-status-text">ЖДЕМ ИГРОКОВ (3-6)...</p>
                 <button id="start-btn" class="retro-btn btn-green" onclick="startGame()" style="display:none;">НАЧАТЬ ИГРУ</button>
-                <button class="retro-btn btn-options" onclick="openSettings()" style="margin-top:10px; padding:10px;">⚙ НАСТРОЙКИ</button>
+                <button class="retro-btn btn-options" onclick="openSettings()" style="margin-top:10px; padding:10px;">⚙ НАСТРОЙКИ ИГРЫ</button>
             </div>
         </div>
 
@@ -104,21 +100,30 @@
 
                 <div class="setting-item" style="border-top:2px solid black; padding-top:10px;">
                     <div class="nsfw-toggle-menu" style="justify-content:space-between;">
-                        <label for="nsfw-check-modal">РЕЖИМ 18+</label>
-                        <input type="checkbox" id="nsfw-check-modal" onchange="updateGameSettings()">
-                    </div>
-                    <div class="nsfw-toggle-menu" style="justify-content:space-between; margin-top:10px;">
                         <label for="bot-check-modal">ИГРАТЬ С БОТАМИ</label>
                         <input type="checkbox" id="bot-check-modal" onchange="updateGameSettings()">
                     </div>
                 </div>
 
+                <div class="setting-item" style="text-align:left;">
+                    <label style="display:block; margin-bottom:5px;">КАТЕГОРИИ ВОПРОСОВ:</label>
+                    <div class="deck-grid">
+                        <label><input type="checkbox" class="deck-check" value="everyday" checked onchange="updateGameSettings()"> Повседневность</label>
+                        <label><input type="checkbox" class="deck-check" value="it" onchange="updateGameSettings()"> IT / Работа</label>
+                        <label><input type="checkbox" class="deck-check" value="gamers" onchange="updateGameSettings()"> Геймеры</label>
+                        <label><input type="checkbox" class="deck-check" value="geeks" onchange="updateGameSettings()"> Гики / Кино</label>
+                        <label><input type="checkbox" class="deck-check" value="girls" onchange="updateGameSettings()"> Девушки</label>
+                        <label><input type="checkbox" class="deck-check" value="guys" onchange="updateGameSettings()"> Парни</label>
+                        <label><input type="checkbox" class="deck-check" value="trolls" onchange="updateGameSettings()"> Тролли</label>
+                        <label style="color:red; font-weight:bold;"><input type="checkbox" class="deck-check" value="nsfw" onchange="updateGameSettings()"> NSFW 18+</label>
+                    </div>
+                </div>
+
                 <div class="setting-item">
-                    <button class="retro-btn btn-options" onclick="testSound()">ПРОВЕРИТЬ ЗВУК</button>
+                    <button class="retro-btn btn-blue" onclick="testSound()">ПРОВЕРИТЬ ЗВУК</button>
                 </div>
 
                 <button class="retro-btn btn-start" onclick="closeSettings()">ЗАКРЫТЬ</button>
-                
                 <button class="retro-btn" style="background:black; color:white; margin-top:10px;" onclick="leaveGame()">ВЫЙТИ В МЕНЮ</button>
             </div>
         </div>
