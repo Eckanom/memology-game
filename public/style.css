@@ -101,7 +101,7 @@ body {
 .btn-start { background: var(--btn-red); }
 .btn-options { background: var(--btn-blue); }
 .btn-green { background: var(--btn-green); }
-.btn-blue { background: var(--btn-blue); } /* Для кнопки Проверить звук */
+.btn-blue { background: var(--btn-blue); }
 
 .lobby-card {
     background: var(--card-white);
@@ -127,14 +127,13 @@ body {
     padding: 10px 5px;
 }
 
-/* === ИЗМЕНЕННЫЙ ХЕДЕР === */
 .game-header {
     background: var(--panel-yellow);
     border: 3px solid black;
     box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.5);
     padding: 8px 10px;
     display: flex;
-    justify-content: space-between; /* Левая группа слева, Счет справа */
+    justify-content: space-between;
     align-items: center;
     width: 100%;
     box-sizing: border-box;
@@ -142,14 +141,12 @@ body {
     margin-top: env(safe-area-inset-top);
 }
 
-/* Группа слева (Шестеренка + Раунд) */
 .header-left {
     display: flex;
     align-items: center;
-    gap: 10px; /* Отступ между шестеренкой и раундом */
+    gap: 10px;
 }
 
-/* КНОПКА ШЕСТЕРЕНКИ (БОЛЬШЕ НЕ АБСОЛЮТНАЯ) */
 .settings-icon-btn {
     background: white;
     border: 3px solid black;
@@ -161,7 +158,6 @@ body {
     cursor: pointer;
     box-shadow: 3px 3px 0px 0px black;
     transition: transform 0.1s;
-    /* Убрали абсолютное позиционирование */
 }
 .settings-icon-btn:active {
     transform: translate(2px, 2px);
@@ -221,7 +217,6 @@ body {
 .podium-place { padding: 10px; margin-bottom: 5px; border: 3px solid black; font-weight: bold; display: flex; justify-content: space-between; color: black; box-shadow: 4px 4px 0 0 black; background: white; }
 .place-1 { background: #FFD700; }
 
-/* === МОДАЛЬНОЕ ОКНО === */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -241,6 +236,8 @@ body {
     max-width: 350px;
     text-align: center;
     transform: rotate(1deg);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modal-card h2 { margin-top: 0; font-family: 'Anton'; font-size: 2.5rem; margin-bottom: 20px; }
@@ -250,3 +247,23 @@ input[type=range] { -webkit-appearance: none; width: 100%; margin: 10px 0; backg
 input[type=range]:focus { outline: none; }
 input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: white; border: 2px solid black; box-shadow: 2px 2px 0 0 black; }
 input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px solid black; background: var(--btn-blue); cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 2px 2px 0 0 black; }
+
+/* Сетка колод */
+.deck-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+.deck-grid label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+.deck-grid input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--btn-blue);
+    margin: 0;
+}
