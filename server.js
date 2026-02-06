@@ -453,7 +453,7 @@ io.on('connection', (socket) => {
                 currentJudgeIndex: 0,
                 currentScenario: '',
                 currentRound: 0, 
-                maxRounds: 9,
+                maxRounds: 20,
                 isNsfw: isNsfw || false,
                 submissions: [],
                 usedScenarios: [],
@@ -600,3 +600,4 @@ function dealCards(deck, count) {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
