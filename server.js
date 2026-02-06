@@ -464,7 +464,7 @@ io.on('connection', (socket) => {
                 deck: [...MEME_CARDS].sort(() => Math.random() - 0.5),
                 createdAt: Date.now(),
                 lastActive: Date.now(),
-                timer: null // Хранилище для таймера
+                timer: null
             };
         }
 
@@ -474,14 +474,24 @@ io.on('connection', (socket) => {
         const existingPlayer = room.players.find(p => p.id === socket.id);
         
         if (!existingPlayer) {
+            // === ГЕНЕРАЦИЯ АВАТАРКИ ===
+            // Используем DiceBear API. Seed = username + timestamp для уникальности
+            const avatarUrl = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${encodeURIComponent(username)}`;
+
             room.players.push({
                 id: socket.id,
                 username,
                 score: 0,
                 isBot: false,
-                hand: dealCards(room, 5)
+                hand: dealCards(room, 5),
+                avatar: avatarUrl, // Храним ссылку на аватар
+                title: 'Новичок', // Начальное звание
+                winStreak: 0      // Серия побед
             });
         }
+
+        // Обновляем звания сразу (чтобы ведущий получил звание Судья)
+        calculateTitles(room);
 
         io.to(roomId).emit('updatePlayers', room.players);
         socket.emit('syncSettings', { withBots: room.withBots, activeDecks: room.activeDecks });
@@ -553,7 +563,10 @@ io.on('connection', (socket) => {
         if (!room || room.gameState !== 'judging') return;
         room.lastActive = Date.now();
         
-        clearTimeout(room.timer); // Останавливаем таймер
+        clearTimeout(room.timer);
+
+        // При ничьей сбрасываем стрики
+        room.players.forEach(p => p.winStreak = 0);
 
         room.submissions.forEach(sub => {
             const player = room.players.find(p => p.id === sub.playerId);
@@ -568,7 +581,7 @@ io.on('connection', (socket) => {
         if (!room || room.gameState !== 'judging') return;
         room.lastActive = Date.now();
         
-        clearTimeout(room.timer); // Останавливаем таймер
+        clearTimeout(room.timer);
         resolveWinner(roomId, winnerSocketId);
     });
 
@@ -591,7 +604,10 @@ io.on('connection', (socket) => {
                         username: botName,
                         score: leavingPlayer.score,
                         isBot: true,
-                        hand: leavingPlayer.hand
+                        hand: leavingPlayer.hand,
+                        avatar: leavingPlayer.avatar, // Сохраняем аватар
+                        title: leavingPlayer.title,
+                        winStreak: leavingPlayer.winStreak
                     };
                     room.players[playerIndex] = bot;
                     if (room.currentJudgeIndex === playerIndex) {
@@ -604,7 +620,7 @@ io.on('connection', (socket) => {
                 const humanCount = room.players.filter(p => !p.isBot).length;
                 if (humanCount === 0) {
                     console.log(`[ROOM] Deleted empty room: ${roomId}`);
-                    clearTimeout(room.timer); // Важно: очищаем таймер при удалении
+                    clearTimeout(room.timer);
                     delete rooms[roomId];
                 }
             }
@@ -627,7 +643,7 @@ setInterval(() => {
         const isInactive = (now - room.lastActive) > MAX_ROOM_LIFETIME;
 
         if (humanCount === 0 || isInactive) {
-            clearTimeout(room.timer); // Очищаем таймер перед удалением
+            clearTimeout(room.timer);
             delete rooms[roomId];
             deletedCount++;
         }
@@ -639,13 +655,53 @@ setInterval(() => {
 
 // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
 
+// !!! НОВАЯ ФУНКЦИЯ ДЛЯ ЗВАНИЙ !!!
+function calculateTitles(room) {
+    if (room.players.length === 0) return;
+
+    // Находим макс и мин очки
+    const maxScore = Math.max(...room.players.map(p => p.score));
+    const minScore = Math.min(...room.players.map(p => p.score));
+    
+    room.players.forEach((p, index) => {
+        // Сначала сбрасываем, если не особое условие
+        p.title = ''; 
+
+        // 1. Судья
+        if (index === room.currentJudgeIndex) {
+            p.title = '⚖️ Судья';
+            return;
+        }
+
+        // 2. Стрик (Тащер)
+        if (p.winStreak >= 2) {
+            p.title = '🔥 Тащер';
+            return;
+        }
+
+        // 3. Лидер
+        if (p.score === maxScore && p.score > 0) {
+            p.title = '👑 Лидер';
+            return;
+        }
+
+        // 4. Нуб (если игра идет уже какое-то время)
+        if (p.score === minScore && room.currentRound > 3) {
+            p.title = '🤡 Нуб';
+            return;
+        }
+
+        // По умолчанию
+        if (!p.title) p.title = 'Игрок';
+    });
+}
+
 function startRoundTimer(roomId, isJudgingPhase = false) {
     const room = rooms[roomId];
     if (!room) return;
 
     if (room.timer) clearTimeout(room.timer);
 
-    // Уведомляем клиентов о начале таймера
     io.to(roomId).emit('timerStart', { duration: TURN_TIMER_SECONDS });
 
     room.timer = setTimeout(() => {
@@ -657,17 +713,14 @@ function startRoundTimer(roomId, isJudgingPhase = false) {
     }, TURN_TIMER_SECONDS * 1000);
 }
 
-// Если время вышло на этапе ВЫБОРА карт
 function handleSelectionTimeout(roomId) {
     const room = rooms[roomId];
     if (!room || room.gameState !== 'selection') return;
 
     const judgeId = room.players[room.currentJudgeIndex].id;
     
-    // Проходим по всем игрокам, кто еще не сдал карту (и не судья)
     room.players.forEach(player => {
         if (player.id !== judgeId && !room.submissions.find(s => s.playerId === player.id)) {
-            // Берем случайную карту из руки
             if (player.hand.length > 0) {
                 const randomCard = player.hand[Math.floor(Math.random() * player.hand.length)];
                 processSubmission(room, player.id, randomCard);
@@ -678,17 +731,14 @@ function handleSelectionTimeout(roomId) {
     checkRoundEnd(roomId);
 }
 
-// Если время вышло на этапе СУДЕЙСТВА
 function handleJudgingTimeout(roomId) {
     const room = rooms[roomId];
     if (!room || room.gameState !== 'judging') return;
 
     if (room.submissions.length > 0) {
-        // Выбираем случайного победителя
         const randomSub = room.submissions[Math.floor(Math.random() * room.submissions.length)];
         resolveWinner(roomId, randomSub.playerId);
     } else {
-        // Если вообще нет карт (странно, но возможно) - просто завершаем раунд без победителя
         finishRound(roomId, 'Время вышло', null, true);
     }
 }
@@ -696,12 +746,16 @@ function handleJudgingTimeout(roomId) {
 function ensureMinimumPlayers(room) {
     let botCounter = 1;
     while (room.players.length < 3) {
+        const botName = `Бот ${botCounter}`;
         room.players.push({
             id: `bot-${Date.now()}-${botCounter}`,
-            username: `Бот ${botCounter}`,
+            username: botName,
             score: 0,
             isBot: true,
-            hand: dealCards(room, 5)
+            hand: dealCards(room, 5),
+            avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${botName}`, // Бот тоже получает аватар
+            title: '🤖 Бот',
+            winStreak: 0
         });
         botCounter++;
     }
@@ -719,9 +773,8 @@ function processSubmission(room, playerId, card) {
 
 function checkRoundEnd(roomId) {
     const room = rooms[roomId];
-    // Все игроки (кроме судьи) сдали карты
     if (room.submissions.length === room.players.length - 1) {
-        clearTimeout(room.timer); // Останавливаем таймер выбора
+        clearTimeout(room.timer); 
 
         room.gameState = 'judging';
         const judge = room.players[room.currentJudgeIndex];
@@ -733,7 +786,6 @@ function checkRoundEnd(roomId) {
             judge: judge.username
         });
         
-        // Запускаем таймер для судьи
         startRoundTimer(roomId, true);
 
         if (judge.isBot) {
@@ -751,11 +803,24 @@ function checkRoundEnd(roomId) {
 
 function resolveWinner(roomId, winnerId) {
     const room = rooms[roomId];
-    if (room.timer) clearTimeout(room.timer); // Точно останавливаем
+    if (room.timer) clearTimeout(room.timer); 
     
+    // Обновляем стрики
+    room.players.forEach(p => {
+        if (p.id === winnerId) {
+            p.score += 1;
+            p.winStreak += 1;
+        } else {
+            // Судья не теряет стрик, остальные теряют
+            if (room.players[room.currentJudgeIndex].id !== p.id) {
+                p.winStreak = 0;
+            }
+        }
+    });
+
     const winner = room.players.find(p => p.id === winnerId);
-    if (winner) winner.score += 1;
     const winCard = room.submissions.find(s => s.playerId === winnerId)?.card;
+    
     finishRound(roomId, winner ? winner.username : 'Никто', winCard, false);
 }
 
@@ -763,7 +828,9 @@ function finishRound(roomId, winnerName, winCard, isDraw) {
     const room = rooms[roomId];
     room.gameState = 'result';
     
-    // Скрываем таймер на клиенте (отправляя 0 или спец событие, но просто начало нового раунда сбросит его)
+    // ПЕРЕСЧИТЫВАЕМ ЗВАНИЯ ПЕРЕД ОТПРАВКОЙ РЕЗУЛЬТАТОВ
+    calculateTitles(room);
+
     io.to(roomId).emit('roundResult', { winnerName, winningCard: winCard, players: room.players, isDraw });
 
     setTimeout(() => {
@@ -772,6 +839,9 @@ function finishRound(roomId, winnerName, winCard, isDraw) {
             io.to(roomId).emit('gameOver', sortedPlayers);
         } else {
             room.currentJudgeIndex = (room.currentJudgeIndex + 1) % room.players.length;
+            // Обновляем звания снова, чтобы судья получил ⚖️
+            calculateTitles(room);
+            io.to(roomId).emit('updatePlayers', room.players); // Обновляем клиент, чтобы звания сменились
             startRound(roomId);
         }
     }, 5000);
@@ -809,7 +879,6 @@ function startRound(roomId) {
         hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
     });
 
-    // ЗАПУСК ТАЙМЕРА РАУНДА
     startRoundTimer(roomId, false);
 
     if (room.withBots) {
