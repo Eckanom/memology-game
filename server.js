@@ -446,7 +446,7 @@ io.on('connection', (socket) => {
                 currentJudgeIndex: 0,
                 currentScenario: '',
                 currentRound: 0, 
-                maxRounds: 9,
+                maxRounds: 15,
                 withBots: false,
                 activeDecks: ['everyday'], // По умолчанию
                 submissions: [],
@@ -735,3 +735,4 @@ function dealCards(room, count) {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
