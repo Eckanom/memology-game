@@ -22,7 +22,6 @@ body {
     background-size: 20px 20px;
     background-blend-mode: overlay;
     
-    /* === ГЛАВНОЕ ИЗМЕНЕНИЕ: ШРИФТ ДЛЯ ВСЕГО === */
     font-family: 'BadaBoom BB', 'Impact', sans-serif;
     letter-spacing: 1px;
     
@@ -224,8 +223,6 @@ body {
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    /* Для обычного текста шрифт лучше сбросить на Impact для читаемости, 
-       но если хочешь везде BadaBoom - оставь как есть */
     line-height: 1.1; 
 }
 
