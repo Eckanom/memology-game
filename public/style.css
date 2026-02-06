@@ -1,87 +1,320 @@
-/* ... (ВСЕ ПРЕДЫДУЩИЕ СТИЛИ БЕЗ ИЗМЕНЕНИЙ) ... */
+/* === ПОДКЛЮЧЕНИЕ ШРИФТА BADABOOM BB (Кириллица) === */
+@font-face {
+    font-family: 'BadaBoom BB';
+    src: url('https://db.onlinewebfonts.com/t/1f4728513903426767793d5f47f20235.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
 
-/* ПАНЕЛЬ ЭМОДЗИ */
-.emoji-toolbar {
-    position: fixed;
-    bottom: 20px;
-    right: 10px;
+:root {
+    --bg-green: #0d2b16;
+    --panel-yellow: #ffd700;
+    --btn-red: #ff4500;
+    --btn-green: #00c853;
+    --btn-blue: #2962ff;
+    --card-white: #f0f0f0;
+    --border-black: #000000;
+}
+
+/* === ГЛАВНОЕ ИСПРАВЛЕНИЕ: ПРИМЕНЯЕМ ШРИФТ КО ВСЕМУ === */
+* {
+    font-family: 'BadaBoom BB', 'Impact', sans-serif !important;
+    letter-spacing: 1px;
+}
+
+body {
+    background-color: var(--bg-green);
+    background-image: radial-gradient(#ffffff 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-blend-mode: overlay;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.app-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+}
+.screen.active { display: flex; }
+
+/* === МЕНЮ === */
+.menu-panel {
+    background-color: var(--panel-yellow);
+    border: 4px solid var(--border-black);
+    box-shadow: 10px 10px 0px 0px black;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 360px;
+    transform: rotate(-2deg);
+    text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    z-index: 100;
+    gap: 20px;
 }
 
-.emoji-toolbar button {
+.logo-area h1 {
+    font-size: 4.5rem;
+    line-height: 0.9;
+    margin: 0;
+    text-transform: uppercase;
+    text-shadow: 3px 3px 0px white;
+    color: black;
+}
+.subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: black;}
+
+/* ПОЛЯ ВВОДА (Исправлено) */
+.input-retro {
+    width: 100%;
+    padding: 15px;
+    border: 3px solid black;
+    font-size: 1.5rem; /* Шрифт крупнее */
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    border-radius: 0;
+    text-transform: uppercase; /* Вводимый текст сразу капсом */
+}
+
+/* Цвет плейсхолдера (подсказки) */
+.input-retro::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-family: 'BadaBoom BB', sans-serif;
+    text-transform: uppercase;
+}
+
+.nsfw-toggle-menu { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; color: black; }
+.nsfw-toggle-menu input { width: 25px; height: 25px; accent-color: var(--btn-red); }
+
+.retro-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.8rem;
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px black;
+    cursor: pointer;
+    text-transform: uppercase;
+    color: white;
+    margin-bottom: 10px;
+}
+.retro-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px 0px black; }
+.btn-start { background: var(--btn-red); }
+.btn-options { background: var(--btn-blue); }
+.btn-green { background: var(--btn-green); }
+.btn-blue { background: var(--btn-blue); }
+
+.lobby-card {
+    background: var(--card-white);
+    border: 4px solid black;
+    box-shadow: 8px 8px 0px 0px black;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+.lobby-card h2 { font-size: 3rem; margin: 0 0 10px 0; }
+
+.room-info {
+    background: var(--panel-yellow);
+    border: 2px solid black;
+    padding: 5px 15px;
+    font-size: 1.5rem;
+    margin: 10px 0;
+    display: inline-block;
+}
+.player-list-container { text-align: left; margin: 20px 0; font-size: 1.2rem; }
+
+/* === ИГРА === */
+.game-layout {
+    justify-content: space-between;
+    padding: 10px 5px;
+}
+
+.game-header {
+    background: var(--panel-yellow);
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.5);
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: env(safe-area-inset-top);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-icon-btn {
     background: white;
     border: 3px solid black;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    box-shadow: 3px 3px 0 0 black;
+    box-shadow: 3px 3px 0px 0px black;
     transition: transform 0.1s;
 }
+.settings-icon-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 black; }
+.settings-icon-btn svg { fill: black; }
 
-.emoji-toolbar button:active {
-    transform: translate(2px, 2px);
-    box-shadow: 0 0 0 0 black;
+.round-info-block {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
-/* ЛЕТАЮЩИЕ СМАЙЛЫ */
-.floating-emoji {
-    position: fixed;
-    bottom: 0;
-    font-size: 4rem;
-    animation: floatUp 2s ease-out forwards;
-    pointer-events: none;
-    z-index: 200;
+.badge-black { 
+    background: black; 
+    color: white; 
+    padding: 3px 8px; 
+    font-size: 1.2rem; 
 }
 
-@keyframes floatUp {
-    0% { transform: translateY(0) scale(0.5); opacity: 1; }
-    100% { transform: translateY(-80vh) scale(1.5); opacity: 0; }
-}/* ... (ВСЕ ПРЕДЫДУЩИЕ СТИЛИ БЕЗ ИЗМЕНЕНИЙ) ... */
+.role-badge { 
+    margin-left: 5px; 
+    color: black !important; 
+    font-size: 1.3rem; 
+}
 
-/* ПАНЕЛЬ ЭМОДЗИ */
-.emoji-toolbar {
-    position: fixed;
-    bottom: 20px;
-    right: 10px;
+.badge-white { 
+    font-size: 1.3rem; 
+    margin-right: 5px;
+    color: black;
+}
+
+.scenario-card-modern {
+    background: var(--card-white);
+    border: 3px solid black;
+    box-shadow: 6px 6px 0px 0px rgba(0,0,0,0.5);
+    width: 100%;
+    transform: rotate(1deg);
+    margin: 10px 0;
+    flex-shrink: 0;
+}
+.card-header-blue { 
+    background: var(--btn-blue); 
+    color: white; 
+    padding: 8px; 
+    font-size: 1.2rem; 
+    border-bottom: 3px solid black; 
+}
+
+/* ТЕКСТ СИТУАЦИИ (Исправлено) */
+.card-body-white { 
+    padding: 15px; 
+    font-size: 1.5rem; /* Крупнее для BadaBoom */
+    text-align: center; 
+    text-transform: uppercase; 
+    min-height: 60px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    line-height: 1.1; 
+}
+
+.table-area {
+    flex: 1;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    z-index: 100;
+    align-items: center;
+    justify-content: center;
 }
-
-.emoji-toolbar button {
-    background: white;
-    border: 3px solid black;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: 3px 3px 0 0 black;
-    transition: transform 0.1s;
+.status-badge { 
+    background: black; 
+    color: var(--panel-yellow); 
+    padding: 5px 15px; 
+    margin-bottom: 10px; 
+    font-size: 1.2rem; 
 }
+.submissions-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; max-width: 600px; }
 
-.emoji-toolbar button:active {
-    transform: translate(2px, 2px);
-    box-shadow: 0 0 0 0 black;
+.submission-card, .judging-card {
+    width: 70px; height: 100px; background: #111; color: white;
+    display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid white;
 }
+.judging-card { background: white; color: black; border: 2px solid black; }
+.judging-card img { width: 100%; height: 100%; object-fit: cover; }
 
-/* ЛЕТАЮЩИЕ СМАЙЛЫ */
-.floating-emoji {
+#hand-area { width: 100%; padding-bottom: env(safe-area-inset-bottom); text-align: center; margin-top: auto; }
+.hand-label { background: black; color: white; display: inline-block; padding: 3px 10px; font-size: 1rem; margin-bottom: 5px; }
+.hand-scroll { display: flex; flex-direction: row; justify-content: center; align-items: flex-end; width: 100%; overflow-x: auto; padding: 10px 0; }
+
+.card {
+    background: white; width: 90px; min-width: 90px; height: 130px;
+    padding: 5px 5px 20px 5px; box-sizing: border-box; border: 2px solid black;
+    box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.4); margin-right: -15px;
+    transition: transform 0.2s; cursor: pointer; position: relative;
+}
+.card:last-child { margin-right: 0; }
+.card:hover, .card:active { transform: translateY(-20px) !important; z-index: 100; border-color: var(--btn-blue); }
+.card img { width: 100%; height: 100%; object-fit: cover; border: 2px solid black; background: #ddd; pointer-events: none; }
+.card::after { content: 'MEME'; position: absolute; bottom: 3px; left: 5px; font-size: 0.8rem; opacity: 0.5; }
+
+.podium-place { padding: 10px; margin-bottom: 5px; border: 3px solid black; display: flex; justify-content: space-between; color: black; box-shadow: 4px 4px 0 0 black; background: white; font-size: 1.3rem; }
+.place-1 { background: #FFD700; }
+
+.modal-overlay {
     position: fixed;
-    bottom: 0;
-    font-size: 4rem;
-    animation: floatUp 2s ease-out forwards;
-    pointer-events: none;
-    z-index: 200;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-@keyframes floatUp {
-    0% { transform: translateY(0) scale(0.5); opacity: 1; }
-    100% { transform: translateY(-80vh) scale(1.5); opacity: 0; }
+.modal-card {
+    background: var(--panel-yellow);
+    border: 4px solid black;
+    box-shadow: 10px 10px 0 0 black;
+    padding: 30px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
+    transform: rotate(1deg);
+    max-height: 90vh;
+    overflow-y: auto;
 }
+
+.modal-card h2 { margin-top: 0; font-size: 3.5rem; margin-bottom: 20px; line-height: 1; }
+.setting-item { margin-bottom: 20px; text-align: left; font-size: 1.2rem; }
+
+/* Чекбоксы в настройках */
+.deck-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 1rem;
+}
+.deck-grid label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.deck-grid input { width: 20px; height: 20px; accent-color: var(--btn-blue); margin: 0; }
+
+input[type=range] { -webkit-appearance: none; width: 100%; margin: 10px 0; background: transparent; }
+input[type=range]:focus { outline: none; }
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: white; border: 2px solid black; box-shadow: 2px 2px 0 0 black; }
+input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px solid black; background: var(--btn-blue); cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 2px 2px 0 0 black; }
