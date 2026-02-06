@@ -1,7 +1,7 @@
 const socket = io();
 
-// ГРОМКОСТЬ (0.0 - 1.0)
-let currentVolume = 5; // По умолчанию 5 из 10
+// ГРОМКОСТЬ
+let currentVolume = 5;
 
 const audio = {
     click: new Audio('/sounds/click.mp3'),
@@ -12,7 +12,6 @@ const audio = {
 function playSound(name) {
     if(audio[name]) { 
         audio[name].currentTime = 0; 
-        // Преобразуем 0-10 в 0.0-1.0
         audio[name].volume = currentVolume / 10;
         audio[name].play().catch(()=>{}); 
     }
@@ -38,6 +37,21 @@ function testSound() {
     playSound('win');
 }
 
+// Выход в главное меню
+function leaveGame() {
+    if(confirm("Точно выйти?")) {
+        location.reload();
+    }
+}
+
+// Отправка настроек на сервер
+function updateGameSettings() {
+    if (!currentRoomId) return; // Если мы не в игре, не отправляем
+    const isNsfw = document.getElementById('nsfw-check-modal').checked;
+    const withBots = document.getElementById('bot-check-modal').checked;
+    socket.emit('updateSettings', { roomId: currentRoomId, isNsfw, withBots });
+}
+
 let myId = '';
 let currentRoomId = '';
 let isJudge = false;
@@ -58,25 +72,33 @@ function joinGame() {
     playSound('click');
     const username = document.getElementById('username').value;
     const roomId = document.getElementById('room').value;
-    const isNsfw = document.getElementById('nsfw-check').checked;
-
+    
+    // Настройки теперь берутся не при входе, а в меню опций
+    // Но для создания комнаты можно передать дефолт (false)
+    
     if (!username || !roomId) return alert("ВВЕДИ ИМЯ И КОМНАТУ!");
 
     currentRoomId = roomId;
-    socket.emit('joinRoom', { username, roomId, isNsfw });
+    socket.emit('joinRoom', { username, roomId });
     showScreen('lobby');
     document.getElementById('room-display').innerText = roomId;
 }
 
-socket.on('roomSettings', (settings) => {
+// Синхронизация галочек в настройках с сервером
+socket.on('syncSettings', (settings) => {
+    document.getElementById('nsfw-check-modal').checked = settings.isNsfw;
+    document.getElementById('bot-check-modal').checked = settings.withBots;
+    
+    // Обновляем бейджи в лобби
     document.getElementById('nsfw-badge').style.display = settings.isNsfw ? 'inline' : 'none';
+    document.getElementById('bot-badge').style.display = settings.withBots ? 'inline' : 'none';
 });
 
 socket.on('updatePlayers', (players) => {
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
         `<div style="border-bottom:2px solid black; padding:5px; display:flex; justify-content:space-between; font-weight:bold;">
-            <span>${p.username}</span>
+            <span>${p.username} ${p.isBot ? '🤖' : ''}</span>
             <span>${p.score} 🏆</span>
         </div>`
     ).join('');
@@ -98,6 +120,7 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
+// === НОВЫЙ РАУНД ===
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
     showScreen('game');
     playSound('card');
@@ -111,6 +134,9 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
     
     document.getElementById('submissions-container').innerHTML = '';
     document.getElementById('status-text').innerText = isJudge ? "ЖДЕМ КАРТЫ..." : "ВЫБЕРИ МЕМ!";
+    
+    // Скрываем кнопку ничьи, пока не начнется судейство
+    document.getElementById('draw-btn').style.display = 'none';
 
     const myHandData = hands.find(h => h.id === myId);
     if (myHandData && !isJudge) {
@@ -155,6 +181,17 @@ socket.on('gameState', (state) => {
         container.innerHTML = '';
         document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : "СУДЬЯ ВЫБИРАЕТ...";
 
+        // Если я судья, показываю кнопку НИЧЬЯ
+        if (isJudge) {
+            const drawBtn = document.getElementById('draw-btn');
+            drawBtn.style.display = 'inline-block';
+            drawBtn.onclick = () => {
+                if(confirm("Объявить ничью? Все получат по баллу.")) {
+                    socket.emit('declareDraw', { roomId: currentRoomId });
+                }
+            };
+        }
+
         state.submissions.forEach(sub => {
             const card = document.createElement('div');
             card.className = 'judging-card';
@@ -174,18 +211,27 @@ socket.on('gameState', (state) => {
     }
 });
 
-socket.on('roundResult', ({ winnerName, winningCard, players }) => {
+socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
     playSound('win');
-    try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
+    if (!isDraw) {
+        try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
+    }
+    
+    document.getElementById('draw-btn').style.display = 'none'; // Скрываем кнопку ничьи
 
-    document.getElementById('status-text').innerHTML = `ПОБЕДИТЕЛЬ: ${winnerName}`;
+    document.getElementById('status-text').innerHTML = isDraw ? "🤝 ДРУЖБА!" : `ПОБЕДИТЕЛЬ: ${winnerName}`;
     
     // Обновляем счет
     const myPlayer = players.find(p => p.id === myId);
     if(myPlayer) document.getElementById('score-board').innerText = `СЧЕТ: ${myPlayer.score}`;
 
     const container = document.getElementById('submissions-container');
-    container.innerHTML = `<div class="judging-card" style="transform:scale(1.2); border-color:var(--btn-green); width:90px; height:130px;"><img src="${winningCard}"></div>`;
+    // Если ничья, не показываем одну карту крупно (или показываем заглушку)
+    if (!isDraw) {
+        container.innerHTML = `<div class="judging-card" style="transform:scale(1.2); border-color:var(--btn-green); width:90px; height:130px;"><img src="${winningCard}"></div>`;
+    } else {
+        container.innerHTML = `<div style="font-size:3rem;">🤝</div>`;
+    }
 });
 
 socket.on('gameOver', (sortedPlayers) => {
