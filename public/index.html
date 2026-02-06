@@ -24,11 +24,6 @@
                     <input type="text" id="username" class="input-retro" placeholder="ТВОЙ НИКНЕЙМ" maxlength="12">
                     <input type="text" id="room" class="input-retro" placeholder="НОМЕР КОМНАТЫ" maxlength="5">
                     
-                    <div class="nsfw-toggle-menu">
-                        <input type="checkbox" id="nsfw-check">
-                        <label for="nsfw-check">РЕЖИМ 18+ (NSFW)</label>
-                    </div>
-
                     <button class="retro-btn btn-start" onclick="joinGame()">ВОЙТИ В ИГРУ</button>
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
@@ -40,13 +35,17 @@
                 <h2>ЛОББИ</h2>
                 <div class="room-info">
                     КОМНАТА: <span id="room-display">...</span>
-                    <span id="nsfw-badge" style="display:none; color:red; font-weight:bold; margin-left:5px;">[18+]</span>
+                </div>
+                <div style="margin-bottom:10px;">
+                     <span id="nsfw-badge" style="display:none; color:red; font-weight:bold; border:1px solid red; padding:2px;">18+</span>
+                     <span id="bot-badge" style="display:none; color:blue; font-weight:bold; border:1px solid blue; padding:2px;">БОТЫ</span>
                 </div>
                 
                 <div id="player-list" class="player-list-container"></div>
 
                 <p id="lobby-status-text">ЖДЕМ ИГРОКОВ (3-6)...</p>
                 <button id="start-btn" class="retro-btn btn-green" onclick="startGame()" style="display:none;">НАЧАТЬ ИГРУ</button>
+                <button class="retro-btn btn-options" onclick="openSettings()" style="margin-top:10px; padding:10px;">⚙ НАСТРОЙКИ</button>
             </div>
         </div>
 
@@ -55,17 +54,13 @@
             <div class="game-header">
                 <div class="header-left">
                     <button class="settings-icon-btn" onclick="openSettings()">
-                        <svg viewBox="0 0 24 24" width="20" height="20">
-                            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-                        </svg>
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
                     </button>
-                    
                     <div class="round-info-block">
                         <span class="badge-black">РАУНД <span id="round-display">1/9</span></span>
                         <span id="role-badge" class="role-badge">...</span>
                     </div>
                 </div>
-
                 <div id="score-board" class="badge-white">СЧЕТ: 0</div>
             </div>
 
@@ -78,6 +73,9 @@
 
             <div class="table-area">
                 <div id="status-text" class="status-badge">ЖДЕМ ХОДА...</div>
+                
+                <button id="draw-btn" class="retro-btn" style="display:none; background:#888; padding:5px; width:auto; font-size:0.8rem; margin-bottom:10px;">🤝 НИЧЬЯ (ВСЕМ БАЛЛ)</button>
+                
                 <div id="submissions-container" class="submissions-grid"></div>
             </div>
 
@@ -104,11 +102,24 @@
                     <input type="range" id="volume-slider" min="0" max="10" value="5" oninput="updateVolume(this.value)">
                 </div>
 
+                <div class="setting-item" style="border-top:2px solid black; padding-top:10px;">
+                    <div class="nsfw-toggle-menu" style="justify-content:space-between;">
+                        <label for="nsfw-check-modal">РЕЖИМ 18+</label>
+                        <input type="checkbox" id="nsfw-check-modal" onchange="updateGameSettings()">
+                    </div>
+                    <div class="nsfw-toggle-menu" style="justify-content:space-between; margin-top:10px;">
+                        <label for="bot-check-modal">ИГРАТЬ С БОТАМИ</label>
+                        <input type="checkbox" id="bot-check-modal" onchange="updateGameSettings()">
+                    </div>
+                </div>
+
                 <div class="setting-item">
                     <button class="retro-btn btn-options" onclick="testSound()">ПРОВЕРИТЬ ЗВУК</button>
                 </div>
 
                 <button class="retro-btn btn-start" onclick="closeSettings()">ЗАКРЫТЬ</button>
+                
+                <button class="retro-btn" style="background:black; color:white; margin-top:10px;" onclick="leaveGame()">ВЫЙТИ В МЕНЮ</button>
             </div>
         </div>
 
