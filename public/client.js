@@ -115,6 +115,26 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
+// === ТАЙМЕР ===
+socket.on('timerStart', ({ duration }) => {
+    const container = document.getElementById('timer-container');
+    const bar = document.getElementById('timer-bar');
+    
+    container.style.display = 'block';
+    
+    // Сбрасываем анимацию
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    
+    // Форсируем перерисовку (hack для перезапуска CSS анимации)
+    void bar.offsetWidth;
+
+    // Запускаем анимацию
+    bar.style.transition = `width ${duration}s linear`;
+    bar.style.width = '0%';
+});
+
+
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
     showScreen('game');
     playSound('card');
@@ -129,7 +149,6 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
         ? `ТЫ СУДЬЯ (${playerCount})` 
         : `ТЫ ИГРОК (${playerCount})`;
     
-    // === ВАЖНО: УБРАНА СМЕНА ЦВЕТА, ТЕПЕРЬ ВСЕГДА ЧЕРНЫЙ ЧЕРЕЗ CSS ===
     badge.style.color = "black"; 
 
     document.getElementById('scenario-text').innerText = scenario;
@@ -216,6 +235,9 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
         try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
     }
     
+    // Скрываем таймер
+    document.getElementById('timer-container').style.display = 'none';
+
     document.getElementById('draw-btn').style.display = 'none';
     document.getElementById('status-text').innerHTML = isDraw ? "🤝 ДРУЖБА!" : `ПОБЕДИТЕЛЬ: ${winnerName}`;
     
