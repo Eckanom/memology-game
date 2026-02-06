@@ -7,7 +7,8 @@ let isJudge = false;
 const screens = {
     login: document.getElementById('login-screen'),
     lobby: document.getElementById('lobby-screen'),
-    game: document.getElementById('game-screen')
+    game: document.getElementById('game-screen'),
+    gameover: document.getElementById('gameover-screen')
 };
 
 function showScreen(name) {
@@ -18,15 +19,25 @@ function showScreen(name) {
 function joinGame() {
     const username = document.getElementById('username').value;
     const roomId = document.getElementById('room').value;
+    const isNsfw = document.getElementById('nsfw-check').checked; // Читаем чекбокс
+
     if (!username || !roomId) return alert("Введи имя и номер комнаты!");
 
     currentRoomId = roomId;
-    socket.emit('joinRoom', { username, roomId });
+    socket.emit('joinRoom', { username, roomId, isNsfw }); // Отправляем настройки
     showScreen('lobby');
     document.getElementById('room-display').innerText = roomId;
 }
 
+// Показываем значок 18+, если комната NSFW
+socket.on('roomSettings', (settings) => {
+    if (settings.isNsfw) {
+        document.getElementById('nsfw-badge').style.display = 'inline-block';
+    }
+});
+
 socket.on('updatePlayers', (players) => {
+    // Обновляем список в Лобби
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
         `<div class="player-item-modern">
@@ -35,15 +46,14 @@ socket.on('updatePlayers', (players) => {
         </div>`
     ).join('');
 
+    // Обновляем кнопку старта
     const startBtn = document.getElementById('start-btn');
-    const status = document.getElementById('lobby-status-text');
-    
     if (players.length >= 3) {
         startBtn.style.display = 'block';
-        status.innerHTML = '<span style="color:var(--success)">Все готовы! Жми старт.</span>';
+        document.getElementById('lobby-status-text').innerText = "Все готовы!";
     } else {
         startBtn.style.display = 'none';
-        status.innerText = `Нужно еще ${3 - players.length} игрока...`;
+        document.getElementById('lobby-status-text').innerText = `Ждем еще ${3 - players.length}...`;
     }
 });
 
@@ -51,22 +61,30 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-socket.on('newRound', ({ judgeId, judgeName, scenario, hands }) => {
+// === НАЧАЛО РАУНДА ===
+socket.on('newRound', ({ roundNumber, totalRounds, judgeId, judgeName, scenario, hands }) => {
     showScreen('game');
     myId = socket.id;
     isJudge = (myId === judgeId);
 
+    // Обновляем номер раунда
+    document.getElementById('round-display').innerText = `Раунд ${roundNumber} / ${totalRounds}`;
+
+    // Обновляем роль
     const badge = document.getElementById('role-badge');
-    badge.innerText = isJudge ? "⚖️ ТЫ СУДЬЯ" : "🤡 ТЫ ИГРОК";
+    badge.innerHTML = isJudge 
+        ? '<i class="fas fa-gavel"></i> ТЫ СУДЬЯ' 
+        : '<i class="fas fa-user"></i> ТЫ ИГРОК';
     badge.style.color = isJudge ? "var(--success)" : "var(--primary-purple)";
 
+    // Сценарий
     document.getElementById('scenario-text').innerText = scenario;
     
-    const statusText = document.getElementById('status-text');
-    statusText.innerText = isJudge ? "Игроки выбирают мемы..." : "Выбери мем снизу!";
-
+    // Очистка стола
     document.getElementById('submissions-container').innerHTML = '';
+    document.getElementById('status-text').innerText = isJudge ? "Игроки выбирают..." : "Выбери мем!";
 
+    // Показываем руку (только если не судья)
     const myHandData = hands.find(h => h.id === myId);
     if (myHandData && !isJudge) {
         renderHand(myHandData.hand);
@@ -76,16 +94,15 @@ socket.on('newRound', ({ judgeId, judgeName, scenario, hands }) => {
     }
 });
 
+// === ОТРИСОВКА РУКИ ===
 function renderHand(cards) {
     const container = document.getElementById('my-hand');
     container.innerHTML = '';
     cards.forEach(imgSrc => {
         const card = document.createElement('div');
         card.className = 'card';
-        
         const img = document.createElement('img');
         img.src = imgSrc;
-        
         card.appendChild(img);
         card.onclick = () => submitCard(imgSrc);
         container.appendChild(card);
@@ -100,39 +117,32 @@ function submitCard(imgSrc) {
 }
 
 socket.on('updateSubmissionsCount', (count) => {
-    if (isJudge) {
-        document.getElementById('status-text').innerText = `Сдано карт: ${count}`;
-    }
+    if (isJudge) document.getElementById('status-text').innerText = `Сдано карт: ${count}`;
+    
     const container = document.getElementById('submissions-container');
     container.innerHTML = '';
     for(let i=0; i<count; i++) {
-        const back = document.createElement('div');
-        back.className = 'card submission-card';
-        back.innerText = '?';
-        container.appendChild(back);
+        container.innerHTML += `<div class="card submission-card">?</div>`;
     }
 });
 
+// === СУДЕЙСТВО ===
 socket.on('gameState', (state) => {
     if (state.state === 'judging') {
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
-        
-        document.getElementById('status-text').innerText = isJudge 
-            ? "ВЫБИРАЙ ЛУЧШИЙ МЕМ!" 
-            : `Судья ${state.judge} думает...`;
+        document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ!" : `Судья ${state.judge} думает...`;
 
         state.submissions.forEach(sub => {
             const card = document.createElement('div');
             card.className = 'card judging-card';
-            
             const img = document.createElement('img');
             img.src = sub.card;
             card.appendChild(img);
             
             if (isJudge) {
                 card.onclick = () => {
-                    if(confirm("Выбрать этот мем?")) {
+                    if(confirm("Выбрать победителя?")) {
                         socket.emit('chooseWinner', { roomId: currentRoomId, winnerSocketId: sub.playerId });
                     }
                 };
@@ -142,16 +152,37 @@ socket.on('gameState', (state) => {
     }
 });
 
+// === РЕЗУЛЬТАТЫ РАУНДА ===
 socket.on('roundResult', ({ winnerName, winningCard, players }) => {
     const status = document.getElementById('status-text');
-    status.innerHTML = `<span style="color:var(--success); font-size: 1.2rem">🏆 Победил ${winnerName}!</span>`;
+    status.innerHTML = `<span style="color:var(--success)">🏆 ${winnerName} +1</span>`;
     
-    const container = document.getElementById('submissions-container');
-    container.innerHTML = `
-        <div class="card judging-card" style="width:150px; height:200px; transform:scale(1.1); border-color:var(--success)">
-            <img src="${winningCard}">
-        </div>`;
+    // Обновляем верхнее табло (Топ-3)
+    const sorted = [...players].sort((a,b) => b.score - a.score);
+    const sb = document.getElementById('score-board');
+    sb.innerHTML = sorted.slice(0, 3).map((p, i) => 
+        `<div class="mini-score ${i===0?'leader':''}">${p.username}: ${p.score}</div>`
+    ).join('');
+});
 
-    const myPlayer = players.find(p => p.id === myId);
-    if (myPlayer) document.getElementById('score-board').innerText = `Очки: ${myPlayer.score}`;
+// === КОНЕЦ ИГРЫ (ПОДИУМ) ===
+socket.on('gameOver', (sortedPlayers) => {
+    showScreen('gameover');
+    const container = document.getElementById('podium-list');
+    
+    let html = '';
+    sortedPlayers.forEach((p, index) => {
+        let placeClass = 'place-rest';
+        let icon = '';
+        if (index === 0) { placeClass = 'place-1'; icon = '👑'; }
+        if (index === 1) { placeClass = 'place-2'; icon = '🥈'; }
+        if (index === 2) { placeClass = 'place-3'; icon = '🥉'; }
+        
+        html += `
+        <div class="podium-place ${placeClass}">
+            <span>${icon} ${index + 1}. ${p.username}</span>
+            <span>${p.score} очков</span>
+        </div>`;
+    });
+    container.innerHTML = html;
 });
