@@ -33,7 +33,6 @@ body {
     position: relative;
 }
 
-/* === ЭКРАНЫ === */
 .screen {
     display: none;
     width: 100%;
@@ -46,7 +45,6 @@ body {
 }
 .screen.active { display: flex; }
 
-/* === МЕНЮ === */
 .menu-panel {
     background-color: var(--panel-yellow);
     border: 4px solid var(--border-black);
@@ -103,8 +101,8 @@ body {
 .btn-start { background: var(--btn-red); }
 .btn-options { background: var(--btn-blue); }
 .btn-green { background: var(--btn-green); }
+.btn-blue { background: var(--btn-blue); } /* Для кнопки Проверить звук */
 
-/* === ЛОББИ === */
 .lobby-card {
     background: var(--card-white);
     border: 4px solid black;
@@ -124,20 +122,19 @@ body {
 }
 .player-list-container { text-align: left; margin: 20px 0; font-weight: bold; }
 
-/* === ИГРА === */
 .game-layout {
     justify-content: space-between;
     padding: 10px 5px;
 }
 
-/* Хедер с шестеренкой посередине */
+/* === ИЗМЕНЕННЫЙ ХЕДЕР === */
 .game-header {
     background: var(--panel-yellow);
     border: 3px solid black;
     box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.5);
-    padding: 8px 15px;
+    padding: 8px 10px;
     display: flex;
-    justify-content: space-between; /* Распределяет элементы по краям */
+    justify-content: space-between; /* Левая группа слева, Счет справа */
     align-items: center;
     width: 100%;
     box-sizing: border-box;
@@ -145,34 +142,36 @@ body {
     margin-top: env(safe-area-inset-top);
 }
 
-.badge-black { background: black; color: white; padding: 2px 6px; font-size: 0.8rem; }
-.badge-white { font-size: 0.9rem; margin-right: 5px;}
-.role-badge { margin-left: 5px; font-weight: bold; color: var(--btn-blue); }
+/* Группа слева (Шестеренка + Раунд) */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Отступ между шестеренкой и раундом */
+}
 
-/* КНОПКА НАСТРОЕК (ШЕСТЕРЕНКА) КАК НА СКРИНЕ */
+/* КНОПКА ШЕСТЕРЕНКИ (БОЛЬШЕ НЕ АБСОЛЮТНАЯ) */
 .settings-icon-btn {
     background: white;
     border: 3px solid black;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     box-shadow: 3px 3px 0px 0px black;
     transition: transform 0.1s;
-    /* Центрирование в хедере */
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    /* Убрали абсолютное позиционирование */
 }
 .settings-icon-btn:active {
-    transform: translateX(-50%) translate(2px, 2px);
+    transform: translate(2px, 2px);
     box-shadow: 0 0 0 0 black;
 }
-.settings-icon-btn svg {
-    fill: black;
-}
+.settings-icon-btn svg { fill: black; }
+
+.badge-black { background: black; color: white; padding: 2px 6px; font-size: 0.8rem; }
+.badge-white { font-size: 0.9rem; margin-right: 5px;}
+.role-badge { margin-left: 5px; font-weight: bold; color: var(--btn-blue); font-size: 0.8rem; }
 
 .scenario-card-modern {
     background: var(--card-white);
@@ -245,36 +244,9 @@ body {
 }
 
 .modal-card h2 { margin-top: 0; font-family: 'Anton'; font-size: 2.5rem; margin-bottom: 20px; }
+.setting-item { margin-bottom: 20px; text-align: left; font-weight: bold; }
 
-.setting-item {
-    margin-bottom: 20px;
-    text-align: left;
-    font-weight: bold;
-}
-
-/* СТИЛИЗАЦИЯ ПОЛЗУНКА */
-input[type=range] {
-    -webkit-appearance: none;
-    width: 100%;
-    margin: 10px 0;
-    background: transparent;
-}
+input[type=range] { -webkit-appearance: none; width: 100%; margin: 10px 0; background: transparent; }
 input[type=range]:focus { outline: none; }
-input[type=range]::-webkit-slider-runnable-track {
-    width: 100%;
-    height: 12px;
-    cursor: pointer;
-    background: white;
-    border: 2px solid black;
-    box-shadow: 2px 2px 0 0 black;
-}
-input[type=range]::-webkit-slider-thumb {
-    height: 24px;
-    width: 24px;
-    border: 2px solid black;
-    background: var(--btn-blue);
-    cursor: pointer;
-    -webkit-appearance: none;
-    margin-top: -8px; /* центрирование */
-    box-shadow: 2px 2px 0 0 black;
-}
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: white; border: 2px solid black; box-shadow: 2px 2px 0 0 black; }
+input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px solid black; background: var(--btn-blue); cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 2px 2px 0 0 black; }
