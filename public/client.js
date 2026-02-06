@@ -17,7 +17,6 @@ function playSound(name) {
     }
 }
 
-// === УПРАВЛЕНИЕ НАСТРОЙКАМИ ===
 function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
     playSound('click');
@@ -43,13 +42,10 @@ function leaveGame() {
     }
 }
 
-// Отправка настроек на сервер (включая колоды)
 function updateGameSettings() {
     if (!currentRoomId) return; 
     
     const withBots = document.getElementById('bot-check-modal').checked;
-    
-    // Собираем все выбранные чекбоксы колод
     const deckCheckboxes = document.querySelectorAll('.deck-check:checked');
     const activeDecks = Array.from(deckCheckboxes).map(cb => cb.value);
 
@@ -85,11 +81,8 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
-// Синхронизация галочек в настройках с сервером
 socket.on('syncSettings', (settings) => {
     document.getElementById('bot-check-modal').checked = settings.withBots;
-    
-    // Синхронизация колод
     const allChecks = document.querySelectorAll('.deck-check');
     allChecks.forEach(cb => {
         cb.checked = settings.activeDecks.includes(cb.value);
@@ -99,7 +92,7 @@ socket.on('syncSettings', (settings) => {
 socket.on('updatePlayers', (players) => {
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
-        `<div style="border-bottom:2px solid black; padding:5px; display:flex; justify-content:space-between; font-weight:bold;">
+        `<div style="border-bottom:2px solid black; padding:5px; display:flex; justify-content:space-between;">
             <span>${p.username} ${p.isBot ? '🤖' : ''}</span>
             <span>${p.score} 🏆</span>
         </div>`
@@ -130,13 +123,15 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
 
     document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
     
-    // Добавлен счетчик игроков в скобках
     const playerCount = hands.length;
-    document.getElementById('role-badge').innerText = isJudge 
-        ? `ТЫ СУДЬЯ ⚖️ (${playerCount})` 
-        : `ТЫ ИГРОК 🤡 (${playerCount})`;
-        
-    document.getElementById('role-badge').style.color = isJudge ? "var(--btn-green)" : "var(--btn-blue)";
+    const badge = document.getElementById('role-badge');
+    badge.innerText = isJudge 
+        ? `ТЫ СУДЬЯ (${playerCount})` 
+        : `ТЫ ИГРОК (${playerCount})`;
+    
+    // === ВАЖНО: УБРАНА СМЕНА ЦВЕТА, ТЕПЕРЬ ВСЕГДА ЧЕРНЫЙ ЧЕРЕЗ CSS ===
+    badge.style.color = "black"; 
+
     document.getElementById('scenario-text').innerText = scenario;
     
     document.getElementById('submissions-container').innerHTML = '';
