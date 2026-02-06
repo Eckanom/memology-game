@@ -3,16 +3,10 @@ const socket = io();
 // ГРОМКОСТЬ
 let currentVolume = 5;
 
-// === ЗАГРУЖАЕМ ЗВУКИ (ЕСЛИ ЕСТЬ ФАЙЛЫ В /public/sounds/) ===
 const audio = {
     click: new Audio('/sounds/click.mp3'),
     card: new Audio('/sounds/card.mp3'),
-    win: new Audio('/sounds/win.mp3'),
-    // Новые звуки для саундборда
-    airhorn: new Audio('/sounds/airhorn.mp3'),
-    cricket: new Audio('/sounds/cricket.mp3'),
-    bruh: new Audio('/sounds/bruh.mp3'),
-    drum: new Audio('/sounds/drum.mp3')
+    win: new Audio('/sounds/win.mp3')
 };
 
 function playSound(name) {
@@ -72,14 +66,6 @@ const screens = {
 function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
-    
-    // Панель реакций показываем только в игре
-    const rBar = document.getElementById('reactions-bar');
-    if (name === 'game') {
-        rBar.style.display = 'flex';
-    } else {
-        rBar.style.display = 'none';
-    }
 }
 
 function joinGame() {
@@ -95,38 +81,6 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
-// === ЛОГИКА РЕАКЦИЙ И ЗВУКОВ ===
-function sendReaction(emoji) {
-    if (!currentRoomId) return;
-    playSound('click');
-    socket.emit('sendReaction', { roomId: currentRoomId, emoji });
-}
-
-// Отправка звука всем
-function triggerSound(soundName) {
-    if (!currentRoomId) return;
-    socket.emit('playSoundEffect', { roomId: currentRoomId, soundName });
-}
-
-socket.on('showReaction', ({ emoji }) => {
-    const el = document.createElement('div');
-    el.innerText = emoji;
-    el.className = 'floating-emoji';
-    const randomLeft = 10 + Math.random() * 80;
-    el.style.left = `${randomLeft}%`;
-    el.style.bottom = '150px'; 
-    el.style.transform = `rotate(${Math.random() * 40 - 20}deg)`;
-    document.body.appendChild(el);
-    setTimeout(() => { el.remove(); }, 3000);
-});
-
-// Слушаем команду от сервера "играть звук"
-socket.on('triggerSound', ({ soundName }) => {
-    playSound(soundName);
-});
-// ===============================
-
-
 socket.on('syncSettings', (settings) => {
     document.getElementById('bot-check-modal').checked = settings.withBots;
     const allChecks = document.querySelectorAll('.deck-check');
@@ -135,6 +89,7 @@ socket.on('syncSettings', (settings) => {
     });
 });
 
+// !!! ОБНОВЛЕННЫЙ СПИСОК ИГРОКОВ (С АВАТАРКАМИ И ЗВАНИЯМИ) !!!
 socket.on('updatePlayers', (players) => {
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
@@ -167,16 +122,22 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
+// === ТАЙМЕР ===
 socket.on('timerStart', ({ duration }) => {
     const container = document.getElementById('timer-container');
     const bar = document.getElementById('timer-bar');
+    
     container.style.display = 'block';
+    
     bar.style.transition = 'none';
     bar.style.width = '100%';
+    
     void bar.offsetWidth;
+
     bar.style.transition = `width ${duration}s linear`;
     bar.style.width = '0%';
 });
+
 
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
     showScreen('game');
@@ -292,6 +253,7 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
         container.innerHTML = `<div style="font-size:3rem;">🤝</div>`;
     }
 
+    // Обновляем список, чтобы показать обновленные звания и очки
     const list = document.getElementById('player-list');
     if(list) {
          list.innerHTML = players.map(p => 
@@ -315,6 +277,7 @@ socket.on('gameOver', (sortedPlayers) => {
     const list = document.getElementById('podium-list');
     list.innerHTML = sortedPlayers.map((p, i) => {
         let cls = i===0 ? 'place-1' : '';
+        // Добавляем аватарку в подиум
         return `<div class="podium-place ${cls}">
             <div style="display:flex; align-items:center; gap:10px;">
                 <span style="font-size:1.5rem;">#${i+1}</span>
