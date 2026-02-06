@@ -7,53 +7,64 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Раздача статики (HTML, CSS, JS)
+// Раздаем файлы из папки public
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === ДАННЫЕ ИГРЫ ===
+// === КОНТЕНТ ИГРЫ ===
 
+// 1. Сценарии (Текстовые карточки)
 const SCENARIOS = [
-    "Мое лицо, когда код заработал с первого раза",
-    "Когда заказчик просит 'просто поиграть со шрифтами'",
-    "Я в 3 часа ночи объясняю коту, почему мы живем бедно",
-    "Когда случайно открыл фронтальную камеру",
-    "Тот момент, когда зарплата пришла, но сразу ушла на кредиты",
-    "Когда джуниор удалил базу данных на проде",
-    "Я пытаюсь понять чужой код без комментариев",
-    "Когда бабушка спрашивает, когда я найду нормальную работу",
-    "Мое лицо, когда кто-то разогревает рыбу в офисной микроволновке",
-    "Когда увидел цены на видеокарты"
+    "Твое лицо, когда случайно лайкнул фото бывшей 2015 года",
+    "Когда начальник шутит, а ты очень хочешь повышения",
+    "Я, когда пытаюсь вспомнить пароль, который 'точно запомню'",
+    "Когда в зуме забыл выключить микрофон и начал обсуждать коллегу",
+    "Тот самый друг, который 'знает короткую дорогу'",
+    "Мое состояние после 5 минут работы в понедельник",
+    "Когда кто-то говорит 'нам надо серьезно поговорить'",
+    "Я смотрю на свой код, который написал неделю назад",
+    "Когда курьер с едой звонит в дверь",
+    "Твое лицо, когда банкомат съел карту, а за тобой очередь",
+    "Когда случайно открыл фронтальную камеру с похмелья",
+    "Я: 'Ложусь спать пораньше'. Я в 3 часа ночи:",
+    "Когда увидел цены на такси в дождь",
+    "Тот момент, когда зарплата пришла и сразу ушла на кредиты",
+    "Когда бабушка спрашивает, когда уже будут внуки",
+    "Я, объясняющий маме, как отправить фото в Ватсапе",
+    "Когда друг говорит 'я уже подхожу', а сам только вышел из душа",
+    "Лицо кота, когда ты чихнул слишком громко",
+    "Когда удалил важное сообщение не у себя, а у обоих",
+    "Попытка выглядеть трезвым перед фейс-контролем",
+    "Когда тебе 25, но спина болит как у деда",
+    "Я, когда увидел свой голос на видеозаписи"
 ];
 
-// Генерация плейсхолдеров для мемов (в реальной игре здесь были бы URL картинок)
-const MEME_CARDS = Array.from({ length: 50 }, (_, i) => `Мем Картинка #${i + 1}`);
+// 2. Генерация колоды картинок
+// В папке public/memes должны лежать файлы 1.jpg, 2.jpg ... 30.jpg
+const TOTAL_IMAGES = 30; 
+const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.jpg`);
 
-// Состояние комнат
+// === ЛОГИКА ИГРЫ ===
+
 const rooms = {};
-
-// === ЛОГИКА SOCKET.IO ===
 
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // Вход в комнату
     socket.on('joinRoom', ({ username, roomId }) => {
         socket.join(roomId);
         
         if (!rooms[roomId]) {
             rooms[roomId] = {
                 players: [],
-                gameState: 'lobby', // lobby, selection, judging, result
+                gameState: 'lobby',
                 currentJudgeIndex: 0,
                 currentScenario: '',
                 submissions: [],
-                deck: [...MEME_CARDS].sort(() => Math.random() - 0.5) // Перемешиваем колоду
+                deck: [...MEME_CARDS].sort(() => Math.random() - 0.5)
             };
         }
 
         const room = rooms[roomId];
-        
-        // Добавляем игрока
         const player = {
             id: socket.id,
             username,
@@ -62,16 +73,13 @@ io.on('connection', (socket) => {
         };
         room.players.push(player);
 
-        // Уведомляем всех в комнате
         io.to(roomId).emit('updatePlayers', room.players);
         
-        // Если игра уже идет, отправляем состояние
         if (room.gameState !== 'lobby') {
             socket.emit('gameState', room);
         }
     });
 
-    // Старт игры
     socket.on('startGame', (roomId) => {
         const room = rooms[roomId];
         if (room && room.players.length >= 3) {
@@ -79,16 +87,13 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Игрок делает ход (выбирает мем)
     socket.on('submitCard', ({ roomId, card }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'selection') return;
 
-        // Проверяем, не судья ли это (судья не ходит)
         const judgeId = room.players[room.currentJudgeIndex].id;
         if (socket.id === judgeId) return;
 
-        // Проверяем, не сходил ли уже
         if (room.submissions.find(s => s.playerId === socket.id)) return;
 
         room.submissions.push({
@@ -97,37 +102,31 @@ io.on('connection', (socket) => {
             username: room.players.find(p => p.id === socket.id).username
         });
 
-        // Удаляем карту из руки игрока и даем новую
+        // Выдаем новую карту
         const player = room.players.find(p => p.id === socket.id);
         player.hand = player.hand.filter(c => c !== card);
         player.hand.push(dealCards(room.deck, 1)[0]);
 
-        // Если все (кроме судьи) сходили -> переходим к судейству
         if (room.submissions.length === room.players.length - 1) {
             room.gameState = 'judging';
             io.to(roomId).emit('gameState', {
                 state: 'judging',
                 scenario: room.currentScenario,
-                submissions: room.submissions, // Показываем карты, но пока без имен (можно скрыть имена на фронте)
+                submissions: room.submissions,
                 judge: room.players[room.currentJudgeIndex].username
             });
         } else {
-            // Просто обновляем статус (кто сходил)
             io.to(roomId).emit('updateSubmissionsCount', room.submissions.length);
         }
     });
 
-    // Судья выбирает победителя
     socket.on('chooseWinner', ({ roomId, winnerSocketId }) => {
         const room = rooms[roomId];
-        // Проверка прав (только судья может вызвать)
         const judgeId = room.players[room.currentJudgeIndex].id;
         if (socket.id !== judgeId || room.gameState !== 'judging') return;
 
         const winner = room.players.find(p => p.id === winnerSocketId);
-        if (winner) {
-            winner.score += 1;
-        }
+        if (winner) winner.score += 1;
 
         room.gameState = 'result';
         io.to(roomId).emit('roundResult', {
@@ -136,33 +135,24 @@ io.on('connection', (socket) => {
             players: room.players
         });
 
-        // Через 5 секунд новый раунд
         setTimeout(() => {
-            // Смена судьи
             room.currentJudgeIndex = (room.currentJudgeIndex + 1) % room.players.length;
             startRound(roomId);
-        }, 5000);
+        }, 6000);
     });
 
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-        // Упрощенная логика: удаляем игрока из всех комнат
         for (const roomId in rooms) {
             const room = rooms[roomId];
             const index = room.players.findIndex(p => p.id === socket.id);
             if (index !== -1) {
                 room.players.splice(index, 1);
                 io.to(roomId).emit('updatePlayers', room.players);
-                // Если комната пуста, удаляем её
-                if (room.players.length === 0) {
-                    delete rooms[roomId];
-                }
+                if (room.players.length === 0) delete rooms[roomId];
             }
         }
     });
 });
-
-// === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
 
 function startRound(roomId) {
     const room = rooms[roomId];
@@ -172,7 +162,6 @@ function startRound(roomId) {
     room.submissions = [];
     room.currentScenario = SCENARIOS[Math.floor(Math.random() * SCENARIOS.length)];
     
-    // Если колода пуста, пересоздаем (упрощено)
     if (room.deck.length < room.players.length) {
         room.deck = [...MEME_CARDS].sort(() => Math.random() - 0.5);
     }
@@ -183,7 +172,7 @@ function startRound(roomId) {
         judgeId: judge.id,
         judgeName: judge.username,
         scenario: room.currentScenario,
-        hands: room.players.map(p => ({ id: p.id, hand: p.hand })) // Отправляем руки приватно (клиент отфильтрует)
+        hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
     });
 }
 
@@ -191,11 +180,10 @@ function dealCards(deck, count) {
     const cards = [];
     for (let i = 0; i < count; i++) {
         if (deck.length > 0) cards.push(deck.pop());
-        else cards.push("Запасная карта");
+        else cards.push("/memes/1.jpg"); // Заглушка, если карты кончились
     }
     return cards;
 }
 
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
