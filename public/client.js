@@ -4,6 +4,28 @@ let myId = '';
 let currentRoomId = '';
 let isJudge = false;
 
+// === ЗВУКИ ===
+// Убедись, что файлы лежат в папке public/sounds/
+const audio = {
+    click: new Audio('/sounds/click.mp3'),
+    card: new Audio('/sounds/card.mp3'),
+    win: new Audio('/sounds/win.mp3')
+};
+
+// Функция безопасного воспроизведения
+function playSound(name) {
+    const sound = audio[name];
+    if (sound) {
+        sound.currentTime = 0; // Перемотка в начало (для быстрых кликов)
+        sound.volume = 0.5;    // Громкость 50%
+        sound.play().catch(err => {
+            // Браузеры блокируют авто-звук, пока юзер не кликнет по странице.
+            // Это нормально, просто игнорируем ошибку до первого клика.
+            console.log('Звук не проигрался (нужен клик):', err);
+        });
+    }
+}
+
 const screens = {
     login: document.getElementById('login-screen'),
     lobby: document.getElementById('lobby-screen'),
@@ -17,11 +39,12 @@ function showScreen(name) {
 }
 
 function joinGame() {
+    playSound('click'); // ЗВУК
     const username = document.getElementById('username').value;
     const roomId = document.getElementById('room').value;
     const isNsfw = document.getElementById('nsfw-check').checked;
 
-    if (!username || !roomId) return alert("Введи имя и номер комнаты!");
+    if (!username || !roomId) return alert("Введи имя и комнату!");
 
     currentRoomId = roomId;
     socket.emit('joinRoom', { username, roomId, isNsfw });
@@ -29,14 +52,8 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
-// Отображение значка 18+ в лобби
 socket.on('roomSettings', (settings) => {
-    const badge = document.getElementById('nsfw-badge');
-    if (settings.isNsfw) {
-        badge.style.display = 'inline-block';
-    } else {
-        badge.style.display = 'none';
-    }
+    document.getElementById('nsfw-badge').style.display = settings.isNsfw ? 'inline-block' : 'none';
 });
 
 socket.on('updatePlayers', (players) => {
@@ -56,38 +73,35 @@ socket.on('updatePlayers', (players) => {
         status.innerHTML = '<span style="color:var(--success)">Все готовы!</span>';
     } else {
         startBtn.style.display = 'none';
-        status.innerText = `Нужно еще ${3 - players.length} игрока...`;
+        status.innerText = `Ждем еще ${3 - players.length} игроков...`;
     }
 });
 
 function startGame() {
+    playSound('click'); // ЗВУК
     socket.emit('startGame', currentRoomId);
 }
 
-// === НОВЫЙ РАУНД ===
-socket.on('newRound', ({ roundNumber, totalRounds, judgeId, judgeName, scenario, hands }) => {
+socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
     showScreen('game');
+    playSound('card'); // ЗВУК РАЗДАЧИ
+    
     myId = socket.id;
     isJudge = (myId === judgeId);
 
-    // ОБНОВЛЕНИЕ НОМЕРА РАУНДА (Исправление бага)
-    document.getElementById('round-display').innerText = `Раунд ${roundNumber} / ${totalRounds}`;
-
-    // ОБНОВЛЕНИЕ РОЛИ
+    document.getElementById('round-display').innerText = `Раунд ${roundNumber}/${totalRounds}`;
+    
     const badge = document.getElementById('role-badge');
     badge.innerHTML = isJudge 
         ? '<i class="fas fa-gavel"></i> ТЫ СУДЬЯ' 
         : '<i class="fas fa-user"></i> ТЫ ИГРОК';
     badge.style.color = isJudge ? "var(--success)" : "var(--primary-purple)";
 
-    // СЦЕНАРИЙ
     document.getElementById('scenario-text').innerText = scenario;
     
-    // СТОЛ И СТАТУС
     document.getElementById('submissions-container').innerHTML = '';
-    document.getElementById('status-text').innerText = isJudge ? "Игроки выбирают мемы..." : "Выбери мем!";
+    document.getElementById('status-text').innerText = isJudge ? "Ждем карты..." : "Выбери мем!";
 
-    // РУКА
     const myHandData = hands.find(h => h.id === myId);
     if (myHandData && !isJudge) {
         renderHand(myHandData.hand);
@@ -103,46 +117,48 @@ function renderHand(cards) {
     cards.forEach(imgSrc => {
         const card = document.createElement('div');
         card.className = 'card';
-        const img = document.createElement('img');
-        img.src = imgSrc;
-        card.appendChild(img);
-        card.onclick = () => submitCard(imgSrc);
+        card.innerHTML = `<img src="${imgSrc}">`;
+        
+        // Звук при наведении (опционально, можно убрать если бесит)
+        // card.onmouseenter = () => playSound('click'); 
+
+        card.onclick = () => {
+            if (isJudge) return;
+            playSound('click'); // ЗВУК
+            document.getElementById('hand-area').style.display = 'none';
+            document.getElementById('status-text').innerText = "Ждем остальных...";
+            socket.emit('submitCard', { roomId: currentRoomId, card: imgSrc });
+        };
         container.appendChild(card);
     });
 }
 
-function submitCard(imgSrc) {
-    if (isJudge) return;
-    document.getElementById('hand-area').style.display = 'none';
-    document.getElementById('status-text').innerText = "Ждем остальных...";
-    socket.emit('submitCard', { roomId: currentRoomId, card: imgSrc });
-}
-
 socket.on('updateSubmissionsCount', (count) => {
-    if (isJudge) document.getElementById('status-text').innerText = `Сдано карт: ${count}`;
+    playSound('click'); // Звук хода соперника
     const container = document.getElementById('submissions-container');
     container.innerHTML = '';
     for(let i=0; i<count; i++) {
         container.innerHTML += `<div class="card submission-card">?</div>`;
     }
+    if (isJudge) document.getElementById('status-text').innerText = `Сдано: ${count}`;
 });
 
 socket.on('gameState', (state) => {
     if (state.state === 'judging') {
+        playSound('card'); // Звук открытия карт
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
-        document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : `Судья ${state.judge} думает...`;
+        document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : "Судья выбирает...";
 
         state.submissions.forEach(sub => {
             const card = document.createElement('div');
             card.className = 'card judging-card';
-            const img = document.createElement('img');
-            img.src = sub.card;
-            card.appendChild(img);
+            card.innerHTML = `<img src="${sub.card}">`;
             
             if (isJudge) {
                 card.onclick = () => {
                     if(confirm("Выбрать этот мем?")) {
+                        playSound('click'); // ЗВУК
                         socket.emit('chooseWinner', { roomId: currentRoomId, winnerSocketId: sub.playerId });
                     }
                 };
@@ -153,47 +169,54 @@ socket.on('gameState', (state) => {
 });
 
 socket.on('roundResult', ({ winnerName, winningCard, players }) => {
-    const status = document.getElementById('status-text');
-    status.innerHTML = `<span style="color:var(--success); font-weight:bold">🏆 ${winnerName} +1</span>`;
+    playSound('win'); // ЗВУК ПОБЕДЫ
     
-    // Обновляем Табло Лидеров
-    updateScoreboard(players);
+    // Эффект конфетти (если библиотека подключена в HTML)
+    try {
+        confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#7c4dff', '#00c853', '#FFD700']
+        });
+    } catch(e) {}
 
-    // Показываем победивший мем
+    document.getElementById('status-text').innerHTML = `<span style="color:var(--success)">🏆 Победил ${winnerName}</span>`;
+    
+    const sb = document.getElementById('score-board');
+    sb.innerHTML = players.sort((a,b)=>b.score-a.score).slice(0,3).map((p,i) => 
+        `<div class="mini-score ${i===0?'leader':''}">${p.username}: ${p.score}</div>`
+    ).join('');
+    
     const container = document.getElementById('submissions-container');
     container.innerHTML = `
-        <div class="card judging-card" style="width:160px; height:220px; transform:scale(1.1); border-color:var(--success)">
+        <div class="card judging-card" style="width:180px; height:240px; transform:scale(1.1); border-color:var(--success); box-shadow: 0 0 20px var(--success);">
             <img src="${winningCard}">
         </div>`;
 });
 
-function updateScoreboard(players) {
-    const sorted = [...players].sort((a,b) => b.score - a.score);
-    const sb = document.getElementById('score-board');
-    // Показываем топ-3
-    sb.innerHTML = sorted.slice(0, 3).map((p, i) => 
-        `<div class="mini-score ${i===0?'leader':''}">${p.username}: ${p.score}</div>`
-    ).join('');
-}
-
-// === КОНЕЦ ИГРЫ ===
 socket.on('gameOver', (sortedPlayers) => {
     showScreen('gameover');
-    const container = document.getElementById('podium-list');
-    let html = '';
+    playSound('win'); // ЗВУК ФИНАЛА
     
-    sortedPlayers.forEach((p, index) => {
-        let placeClass = 'place-rest';
-        let icon = '';
-        if (index === 0) { placeClass = 'place-1'; icon = '👑'; }
-        else if (index === 1) { placeClass = 'place-2'; icon = '🥈'; }
-        else if (index === 2) { placeClass = 'place-3'; icon = '🥉'; }
-        
-        html += `
-        <div class="podium-place ${placeClass}">
-            <span>${icon} ${index+1}. ${p.username}</span>
-            <span>${p.score} очков</span>
+    // Большой салют
+    try {
+        var duration = 3000;
+        var end = Date.now() + duration;
+        (function frame() {
+          confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+          confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+          if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+    } catch(e) {}
+
+    const list = document.getElementById('podium-list');
+    list.innerHTML = sortedPlayers.map((p, i) => {
+        let cls = i===0 ? 'place-1' : i===1 ? 'place-2' : 'place-3';
+        let icon = i===0 ? '👑' : i===1 ? '🥈' : '🥉';
+        return `<div class="podium-place ${cls}">
+            <span>${icon} #${i+1} ${p.username}</span>
+            <span>${p.score}</span>
         </div>`;
-    });
-    container.innerHTML = html;
+    }).join('');
 });
