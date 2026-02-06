@@ -1,7 +1,7 @@
 {
-  "name": "memology-mvp",
+  "name": "memology-ultimate",
   "version": "1.0.0",
-  "description": "Multiplayer Meme Game",
+  "description": "Multiplayer Meme Game Ultimate Edition",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
