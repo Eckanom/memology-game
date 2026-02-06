@@ -4,24 +4,20 @@ let myId = '';
 let currentRoomId = '';
 let isJudge = false;
 
-// Элементы UI
 const screens = {
     login: document.getElementById('login-screen'),
     lobby: document.getElementById('lobby-screen'),
     game: document.getElementById('game-screen')
 };
 
-// === НАВИГАЦИЯ ===
 function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
 }
 
-// === ВХОД ===
 function joinGame() {
     const username = document.getElementById('username').value;
     const roomId = document.getElementById('room').value;
-
     if (!username || !roomId) return alert("Введите имя и комнату!");
 
     currentRoomId = roomId;
@@ -30,19 +26,24 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
-// === ЛОББИ ===
 socket.on('updatePlayers', (players) => {
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
-        `<div class="player-item">👤 ${p.username} ${p.score} очков</div>`
+        `<div class="player-item">
+            <div style="font-size:1.5rem">👤</div>
+            <div>${p.username}</div>
+            <div style="color:#94a3b8">${p.score} pts</div>
+        </div>`
     ).join('');
 
-    // Кнопка старта только если 3+ игрока
     const startBtn = document.getElementById('start-btn');
+    // Показываем кнопку, если игроков >= 3
     if (players.length >= 3) {
         startBtn.style.display = 'block';
+        document.querySelector('.lobby-status p').innerText = "Готовы к старту!";
     } else {
         startBtn.style.display = 'none';
+        document.querySelector('.lobby-status p').innerText = `Ждем игроков (нужно еще ${3 - players.length})...`;
     }
 });
 
@@ -50,27 +51,30 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-// === ИГРА: НАЧАЛО РАУНДА ===
 socket.on('newRound', ({ judgeId, judgeName, scenario, hands }) => {
     showScreen('game');
     myId = socket.id;
     isJudge = (myId === judgeId);
 
-    // Обновляем роль
     const badge = document.getElementById('role-badge');
-    badge.innerText = isJudge ? `👨‍⚖️ ТЫ СУДЬЯ` : `🤡 ИГРОК`;
-    badge.style.background = isJudge ? '#d63031' : '#0984e3';
+    if (isJudge) {
+        badge.innerText = "⚖️ ТЫ СУДЬЯ";
+        badge.style.background = "var(--accent)";
+        badge.style.color = "white";
+    } else {
+        badge.innerText = "🃏 ТЫ ИГРОК";
+        badge.style.background = "#334155";
+        badge.style.color = "#94a3b8";
+    }
 
-    // Сценарий
     document.getElementById('scenario-text').innerText = scenario;
-    document.getElementById('status-text').innerText = isJudge 
-        ? "Жди, пока холопы выберут мемы..." 
-        : "Выбери самый смешной мем!";
+    
+    const statusText = document.getElementById('status-text');
+    statusText.innerText = isJudge ? "Ждем, пока игроки выберут карты..." : "Выбери карту снизу!";
+    statusText.className = isJudge ? "status-message pulse" : "status-message";
 
-    // Очистка стола
     document.getElementById('submissions-container').innerHTML = '';
 
-    // Рука игрока
     const myHandData = hands.find(h => h.id === myId);
     if (myHandData && !isJudge) {
         renderHand(myHandData.hand);
@@ -86,64 +90,62 @@ function renderHand(cards) {
     cards.forEach(cardText => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.innerText = cardText; // В реальной игре здесь был бы <img>
+        // Вставляем текст, можно добавить иконки
+        card.innerHTML = `<div style="font-size:0.8rem">${cardText}</div>`;
         card.onclick = () => submitCard(cardText);
         container.appendChild(card);
     });
 }
 
-// === ИГРА: ХОД ИГРОКА ===
 function submitCard(cardText) {
     if (isJudge) return;
     
-    // Оптимистичное удаление из UI
-    document.getElementById('my-hand').innerHTML = '<p>Карта отправлена! Ждем остальных...</p>';
+    document.getElementById('my-hand').innerHTML = 
+        '<div style="text-align:center; color:#94a3b8; width:100%">Карта отправлена... ⏳</div>';
     
     socket.emit('submitCard', { roomId: currentRoomId, card: cardText });
 }
 
-// Обновление счетчика сданных карт
 socket.on('updateSubmissionsCount', (count) => {
     if (isJudge) {
         document.getElementById('status-text').innerText = `Сдано карт: ${count}`;
     }
 });
 
-// === ИГРА: СУДЕЙСТВО ===
 socket.on('gameState', (state) => {
     if (state.state === 'judging') {
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
         
         document.getElementById('status-text').innerText = isJudge 
-            ? "ВЫБИРАЙ ПОБЕДИТЕЛЯ!" 
-            : `Судья ${state.judge} выбирает...`;
+            ? "ВЫБЕРИ ПОБЕДИТЕЛЯ (Нажми на карту)" 
+            : `Судья ${state.judge} выбирает лучший мем...`;
 
         state.submissions.forEach(sub => {
             const card = document.createElement('div');
             card.className = 'card submission-card';
             card.innerText = sub.card;
             
-            // Только судья может кликать
             if (isJudge) {
                 card.style.cursor = 'pointer';
                 card.onclick = () => {
-                    socket.emit('chooseWinner', { roomId: currentRoomId, winnerSocketId: sub.playerId });
+                    if(confirm("Выбрать эту карту победителем?")) {
+                        socket.emit('chooseWinner', { roomId: currentRoomId, winnerSocketId: sub.playerId });
+                    }
                 };
-            } else {
-                card.style.cursor = 'default';
             }
             container.appendChild(card);
         });
     }
 });
 
-// === РЕЗУЛЬТАТ РАУНДА ===
 socket.on('roundResult', ({ winnerName, winningCard, players }) => {
     const status = document.getElementById('status-text');
-    status.innerHTML = `🏆 Победил <b>${winnerName}</b> с мемом:<br>"${winningCard}"`;
+    status.innerHTML = `<span style="color:var(--primary)">🏆 ${winnerName} победил!</span><br><small>${winningCard}</small>`;
     
-    // Обновляем список очков в хедере
+    // Обновляем очки
     const sb = document.getElementById('score-board');
-    sb.innerHTML = players.map(p => `${p.username}: ${p.score}`).join(' | ');
+    // Показываем топ-3 лидеров
+    const leaders = players.sort((a,b) => b.score - a.score).slice(0,3);
+    sb.innerHTML = leaders.map(p => `${p.username}: ${p.score}`).join(' | ');
 });
