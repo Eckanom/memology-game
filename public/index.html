@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Memeology</title>
+    <title>Memeology Ultimate</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
 
@@ -15,17 +15,15 @@
         
         <div id="login-screen" class="screen active centered-screen">
             <div class="login-card">
-                <h1><i class="fas fa-laugh-squint icon-purple"></i> Мемология</h1>
-                <p class="subtitle">Введи ник и залетай в комнату</p>
+                <h1>👾 Мемология</h1>
+                <p class="subtitle">Ultimate Edition</p>
                 <div class="input-group">
-                    <i class="fas fa-user"></i>
                     <input type="text" id="username" placeholder="Твой никнейм" maxlength="15">
                 </div>
                 <div class="input-group">
-                    <i class="fas fa-door-open"></i>
-                    <input type="text" id="room" placeholder="ID Комнаты (например: 777)" maxlength="10">
+                    <input type="text" id="room" placeholder="Номер комнаты (напр. 101)" maxlength="10">
                 </div>
-                <button class="btn-primary full-width" onclick="joinGame()">ВОЙТИ В ИГРУ</button>
+                <button class="btn-primary full-width" onclick="joinGame()">ВОЙТИ</button>
             </div>
         </div>
 
@@ -33,16 +31,15 @@
             <div class="lobby-card">
                 <div class="lobby-header">
                     <h2>Комната: <span id="room-display" class="highlight-purple">...</span></h2>
-                    <span class="status-badge">Ожидание</span>
                 </div>
                 
                 <div class="players-section">
-                    <h3>Игроки в лобби:</h3>
+                    <h3>Игроки онлайн:</h3>
                     <div id="player-list" class="players-list-modern"></div>
                 </div>
 
                 <div class="lobby-footer">
-                    <p id="lobby-status-text">Ждем минимум 3 игроков...</p>
+                    <p id="lobby-status-text">Нужно минимум 3 игрока...</p>
                     <button id="start-btn" class="btn-primary full-width" onclick="startGame()" style="display:none;">НАЧАТЬ ИГРУ</button>
                 </div>
             </div>
@@ -51,30 +48,28 @@
         <div id="game-screen" class="screen game-layout">
             
             <header class="game-header">
-                <div class="role-indicator" id="role-badge">Загрузка роли...</div>
+                <div class="role-indicator" id="role-badge">...</div>
                 <div class="score-panel" id="score-board">Очки: 0</div>
             </header>
 
             <main class="game-main">
                 <div class="scenario-card-modern">
-                    <div class="card-header-purple">
-                        <i class="fas fa-quote-left"></i> СИТУАЦИЯ
-                    </div>
+                    <div class="card-header-purple">СИТУАЦИЯ</div>
                     <div class="card-body-white">
-                        <p id="scenario-text">Загрузка ситуации...</p>
+                        <p id="scenario-text">...</p>
                     </div>
                 </div>
 
                 <div class="table-area-modern">
                     <div class="table-status">
-                        <i class="fas fa-info-circle"></i> <span id="status-text">Статус игры...</span>
+                        <span id="status-text">Загрузка...</span>
                     </div>
                     <div id="submissions-container" class="cards-row table-row"></div>
                 </div>
             </main>
 
             <footer id="hand-area" class="hand-footer">
-                <div class="hand-header">Твои карты</div>
+                <div class="hand-header">Твои мемы</div>
                 <div id="my-hand" class="cards-row hand-row"></div>
             </footer>
         </div>
