@@ -83,18 +83,6 @@
                 <div class="hand-label">ТВОИ КАРТЫ</div>
                 <div id="my-hand" class="hand-scroll"></div>
             </div>
-
-            <div id="reactions-bar" style="display:none; position:fixed; right:10px; bottom:120px; z-index:500; flex-direction:column; gap:10px;">
-                <button class="reaction-btn" onclick="sendReaction('😂')">😂</button>
-                <button class="reaction-btn" onclick="sendReaction('💩')">💩</button>
-                
-                <div style="width:100%; height:2px; background:black; margin:5px 0;"></div>
-                
-                <button class="reaction-btn" style="background:var(--panel-yellow);" onclick="triggerSound('airhorn')">📢</button>
-                <button class="reaction-btn" style="background:var(--panel-yellow);" onclick="triggerSound('cricket')">🦗</button>
-                <button class="reaction-btn" style="background:var(--panel-yellow);" onclick="triggerSound('bruh')">🤡</button>
-                <button class="reaction-btn" style="background:var(--panel-yellow);" onclick="triggerSound('drum')">🥁</button>
-            </div>
         </div>
 
         <div id="gameover-screen" class="screen">
@@ -131,7 +119,7 @@
                         <label><input type="checkbox" class="deck-check" value="girls" onchange="updateGameSettings()"> Девушки</label>
                         <label><input type="checkbox" class="deck-check" value="guys" onchange="updateGameSettings()"> Парни</label>
                         <label><input type="checkbox" class="deck-check" value="trolls" onchange="updateGameSettings()"> Тролли</label>
-                        <label style="color:red; font-weight:bold;"><input type="checkbox" class="deck-check" value="nsfw" onchange=\"updateGameSettings()\"> NSFW 18+</label>
+                        <label style="color:red; font-weight:bold;"><input type="checkbox" class="deck-check" value="nsfw" onchange="updateGameSettings()"> NSFW 18+</label>
                     </div>
                 </div>
 
