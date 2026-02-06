@@ -2,23 +2,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
-    /* Палитра из твоего скриншота */
-    --bg-green: #0d2b16;       /* Темно-зеленый фон */
+    --bg-green: #0d2b16;       /* Темно-зеленый (сукно стола) */
     --panel-yellow: #ffd700;   /* Желтая панель */
-    --btn-red: #ff4500;        /* Красная кнопка */
-    --btn-green: #00c853;      /* Зеленая кнопка */
-    --btn-blue: #2962ff;       /* Синяя кнопка */
-    --card-white: #ffffff;     /* Белый цвет карт */
-    --border-black: #000000;   /* Черная обводка */
-    
-    /* Размеры */
-    --border-thick: 4px;
-    --shadow-depth: 8px;
+    --btn-red: #ff4500;
+    --btn-green: #00c853;
+    --btn-blue: #2962ff;
+    --card-white: #f0f0f0;
+    --border-black: #000000;
+    --shadow-color: rgba(0,0,0,0.4);
 }
 
 body {
     background-color: var(--bg-green);
-    /* Текстура шума для фона (как на скрине) */
     background-image: radial-gradient(#ffffff 1px, transparent 1px);
     background-size: 20px 20px;
     background-blend-mode: overlay;
@@ -27,262 +22,321 @@ body {
     font-family: 'Space Mono', monospace;
     margin: 0;
     height: 100vh;
-    overflow: hidden;
+    /* Важно для мобильных: запрет скролла всей страницы, чтобы не дергалась */
+    overflow: hidden; 
     display: flex;
     justify-content: center;
     align-items: center;
+    /* Убираем выделение текста на мобильных */
+    user-select: none;
+    -webkit-user-select: none;
 }
 
-/* === ОБЩИЙ КОНТЕЙНЕР === */
 .app-container {
     width: 100%;
     height: 100%;
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
+/* === ЭКРАНЫ (Общие стили) === */
 .screen {
     display: none;
     width: 100%;
     height: 100%;
-    max-width: 1200px;
-    flex-direction: row; /* Слева меню, справа карты */
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 50px;
-    padding: 20px;
     box-sizing: border-box;
+    padding: 20px;
 }
 
 .screen.active {
     display: flex;
 }
 
-/* На мобильных всё в колонку */
-@media (max-width: 768px) {
-    .screen {
-        flex-direction: column;
-        gap: 20px;
-    }
-}
-
-/* === МЕНЮ (Желтая панель слева) === */
+/* === МЕНЮ (АДАПТИВНОЕ) === */
 .menu-panel {
     background-color: var(--panel-yellow);
-    border: var(--border-thick) solid var(--border-black);
-    box-shadow: var(--shadow-depth) var(--shadow-depth) 0px 0px var(--border-black);
-    padding: 40px;
-    width: 350px;
-    transform: rotate(-2deg); /* Легкий наклон как на скрине */
-    position: relative;
+    border: 4px solid var(--border-black);
+    box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+    padding: 30px;
+    width: 90%;          /* Ширина 90% экрана */
+    max-width: 350px;    /* Но не больше 350px */
+    transform: rotate(-2deg);
+    text-align: left;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    z-index: 10;
+    gap: 15px;
+    box-sizing: border-box;
 }
 
-.version-tag {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    font-size: 0.7rem;
-    opacity: 0.6;
-}
-
-.logo-area {
-    margin-bottom: 20px;
-    text-align: left;
-}
-
-h1 {
+.logo-area h1 {
     font-family: 'Anton', sans-serif;
-    font-size: 4rem;
+    font-size: 3.5rem;   /* Чуть меньше для мобилок */
     line-height: 0.9;
     text-transform: uppercase;
     margin: 0;
-    letter-spacing: -2px;
 }
 
-.subtitle {
-    font-family: 'Space Mono', monospace;
-    font-size: 1rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-top: 5px;
-    display: block;
-}
-
-/* === КНОПКИ ГЛАВНОГО МЕНЮ === */
-.retro-btn {
-    width: 100%;
-    padding: 20px;
-    font-family: 'Space Mono', monospace; /* Важно: шрифт кнопок как на скрине */
-    font-weight: 700;
-    font-size: 1.2rem;
-    border: 3px solid var(--border-black);
-    box-shadow: 4px 4px 0px 0px var(--border-black);
-    cursor: pointer;
-    text-align: left; /* Текст слева */
-    transition: all 0.1s;
-    color: white;
-    text-transform: capitalize;
-}
-
-.retro-btn:active {
-    transform: translate(4px, 4px);
-    box-shadow: 0px 0px 0px 0px var(--border-black);
-}
-
-.btn-start { background-color: var(--btn-red); }
-.btn-market { background-color: var(--btn-green); }
-.btn-options { background-color: var(--btn-blue); }
-
-/* Инпуты внутри меню (для ввода имени) */
 .input-retro {
     width: 100%;
-    padding: 15px;
-    border: 3px solid var(--border-black);
-    background: white;
-    font-family: 'Space Mono', monospace;
+    padding: 15px; /* Удобно для пальца */
+    border: 3px solid black;
+    font-family: 'Space Mono';
     font-size: 1rem;
-    box-sizing: border-box;
     margin-bottom: 10px;
+    box-sizing: border-box;
+    border-radius: 0; /* Убираем скругление iOS */
+    -webkit-appearance: none;
 }
 
-/* === ПРАВАЯ ЧАСТЬ (КАРТОЧКИ КОЛОД) === */
-.deck-showcase {
-    display: flex;
-    gap: 30px;
-    perspective: 1000px;
-}
-
-.polaroid-card {
-    background: var(--card-white);
-    border: 3px solid var(--border-black);
-    padding: 15px 15px 40px 15px; /* Снизу больше места под текст */
-    width: 220px;
-    box-shadow: 10px 10px 0px 0px rgba(0,0,0,0.5);
-    transition: transform 0.3s;
+.retro-btn {
+    width: 100%;
+    padding: 18px; /* Кнопки побольше для пальца */
+    font-family: 'Space Mono', monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px black;
     cursor: pointer;
-    position: relative;
-}
-
-.polaroid-card:hover {
-    transform: scale(1.05) rotate(0deg) !important;
-    z-index: 20;
-}
-
-.polaroid-image {
-    width: 100%;
-    height: 200px;
-    border: 2px solid var(--border-black);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-}
-
-/* Цвета внутри полароидов */
-.bg-orange { background-color: #ff4500; }
-.bg-blue { background-color: #2962ff; }
-
-.polaroid-footer {
-    margin-top: 15px;
-    font-weight: bold;
-    text-transform: uppercase;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.deck-number {
-    font-size: 0.7rem;
-    opacity: 0.5;
-}
-
-.selected-badge {
-    background: black;
-    color: white;
-    padding: 2px 6px;
-    font-size: 0.7rem;
-}
-
-/* === ЭКРАН ИГРЫ (Адаптация под новый стиль) === */
-.game-layout {
-    flex-direction: column;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.game-header {
-    background: var(--panel-yellow);
-    border: 3px solid var(--border-black);
-    box-shadow: 6px 6px 0px 0px var(--border-black);
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    margin-bottom: 20px;
-    transform: rotate(1deg);
-}
-
-.scenario-card-modern {
-    background: var(--card-white);
-    border: 3px solid var(--border-black);
-    box-shadow: 8px 8px 0px 0px var(--border-black);
-    transform: rotate(-1deg);
-    width: 100%;
-}
-
-.card-header-purple {
-    background: var(--btn-blue); /* Синий заголовок как на скрине */
-    color: white;
-    padding: 10px;
-    font-weight: bold;
-    border-bottom: 3px solid var(--border-black);
-}
-
-.card-body-white {
-    padding: 30px;
-    font-size: 1.5rem;
-    font-weight: bold;
     text-align: center;
+    color: white;
     text-transform: uppercase;
+    box-sizing: border-box;
 }
-
-/* Игровые карты */
-.card {
-    background: var(--card-white);
-    border: 3px solid var(--border-black);
-    border-radius: 0; /* Острые углы */
-    box-shadow: 4px 4px 0px 0px var(--border-black);
-    transition: transform 0.2s;
-    padding: 10px 10px 30px 10px; /* Полароид стиль */
-}
-
-.card:hover {
-    transform: translate(-4px, -4px);
-    box-shadow: 8px 8px 0px 0px var(--border-black);
-}
-
-.card img {
-    border: 2px solid var(--border-black);
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-}
+.retro-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px 0px black; }
+.btn-start { background: var(--btn-red); }
+.btn-market { background: var(--btn-green); }
 
 /* === ЛОББИ === */
 .lobby-card {
     background: var(--card-white);
     border: 4px solid var(--border-black);
-    box-shadow: 10px 10px 0px 0px var(--border-black);
-    padding: 30px;
-    width: 100%;
-    max-width: 500px;
+    box-shadow: 8px 8px 0px 0px var(--border-black);
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-/* Скрытие/показ инпутов */
-.hidden { display: none; }
+/* === ИГРОВОЙ ЭКРАН (МОБИЛЬНАЯ ВЕРСТКА) === */
+.game-layout {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Распределяем верх, центр и низ */
+}
+
+/* 1. Верхняя панель (Компактная) */
+.game-header {
+    background: var(--panel-yellow);
+    border: 3px solid var(--border-black);
+    box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.5);
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.8rem; /* Шрифт поменьше */
+    z-index: 20;
+    margin-top: env(safe-area-inset-top); /* Отступ от "челки" айфона */
+}
+
+/* 2. Ситуация (Карточка вопроса) */
+.scenario-card-modern {
+    background: var(--card-white);
+    border: 3px solid var(--border-black);
+    box-shadow: 6px 6px 0px 0px rgba(0,0,0,0.5);
+    width: 100%;
+    transform: rotate(1deg);
+    margin: 10px 0;
+    flex-shrink: 0; /* Не сжимать */
+}
+
+.card-header-purple {
+    background: var(--btn-blue);
+    color: white;
+    padding: 8px;
+    font-weight: bold;
+    border-bottom: 3px solid var(--border-black);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+.card-body-white {
+    padding: 15px;
+    font-size: 1rem; /* Оптимально для чтения с телефона */
+    line-height: 1.4;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 3. Игровая зона (Стол) */
+.table-area {
+    flex: 1; /* Занимает всё доступное место */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto; /* Если карт много - скролл */
+    position: relative;
+}
+
+#status-text {
+    background: black;
+    color: var(--panel-yellow);
+    padding: 5px 10px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    border-radius: 4px;
+}
+
+#submissions-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+/* 4. Рука игрока (Фиксирована внизу) */
+#hand-area {
+    width: 100%;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Отступ от полоски iPhone */
+    z-index: 30;
+}
+
+#my-hand {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start; /* Начинаем слева */
+    align-items: flex-end;
+    gap: 0px; /* Карты накладываются */
+    width: 100%;
+    overflow-x: auto; /* Горизонтальный скролл, если карт много */
+    padding: 20px 10px; /* Отступы для эффекта hover */
+    /* Скрываем скроллбар, но оставляем скролл */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+#my-hand::-webkit-scrollbar { display: none; } /* Chrome */
+
+/* === КАРТЫ (Адаптация под палец) === */
+.card {
+    background: white;
+    /* Размеры чуть меньше для мобилок */
+    width: 100px;           
+    min-width: 100px;       
+    height: 140px;
+    padding: 6px 6px 25px 6px;
+    box-sizing: border-box;
+    border: 2px solid black;
+    box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    position: relative;
+    /* На мобильных hover работает плохо, поэтому эффекты при клике важнее */
+    transition: transform 0.2s;
+    margin-right: -20px; /* Наложение карт веером */
+}
+
+/* Последняя карта не должна перекрываться следующей (ее нет) */
+.card:last-child { margin-right: 0; }
+
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: 2px solid #000;
+    background: #ddd;
+    pointer-events: none; /* Чтобы клик по картинке не мешал клику по карте */
+}
+
+.card::after {
+    content: 'MEME';
+    position: absolute;
+    bottom: 4px;
+    left: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: #000;
+    opacity: 0.5;
+}
+
+/* Активная карта (выбранная или при нажатии) */
+.card:active {
+    transform: translateY(-15px) scale(1.1) !important;
+    z-index: 100;
+    border-color: var(--btn-blue);
+}
+
+/* Карты на столе (чуть меньше, чтобы влезали) */
+.submission-card {
+    background: #111;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    width: 80px;
+    height: 110px;
+    margin-right: 0; /* На столе карты не накладываются */
+}
+
+/* Карта победителя (крупнее) */
+.judging-card {
+    transform: scale(1.1);
+    margin: 10px;
+    margin-right: 0;
+}
+
+/* === ПЕРЕКЛЮЧАТЕЛЬ 18+ === */
+.nsfw-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--btn-red);
+}
+
+/* ПОДИУМ */
+.podium-place { 
+    padding: 15px; 
+    margin-bottom: 10px;
+    border: 3px solid black;
+    font-weight: bold; 
+    display: flex; justify-content: space-between; 
+    color: black;
+    box-shadow: 4px 4px 0 0 black;
+}
+.place-1 { background: #FFD700; transform: scale(1.05); }
+.place-2 { background: #C0C0C0; }
+.place-3 { background: #CD7F32; color: white; }
