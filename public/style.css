@@ -2,14 +2,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap');
 
 :root {
-    --bg-green: #0d2b16;       /* Темно-зеленый (сукно стола) */
-    --panel-yellow: #ffd700;   /* Желтая панель */
+    --bg-green: #0d2b16;
+    --panel-yellow: #ffd700;
     --btn-red: #ff4500;
     --btn-green: #00c853;
-    --btn-blue: #2962ff;
+    --btn-blue: #2962ff; /* Ярко-синий для опций */
     --card-white: #f0f0f0;
     --border-black: #000000;
-    --shadow-color: rgba(0,0,0,0.4);
 }
 
 body {
@@ -17,17 +16,14 @@ body {
     background-image: radial-gradient(#ffffff 1px, transparent 1px);
     background-size: 20px 20px;
     background-blend-mode: overlay;
-    
     color: var(--border-black);
     font-family: 'Space Mono', monospace;
     margin: 0;
     height: 100vh;
-    /* Важно для мобильных: запрет скролла всей страницы, чтобы не дергалась */
-    overflow: hidden; 
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Убираем выделение текста на мобильных */
     user-select: none;
     -webkit-user-select: none;
 }
@@ -35,13 +31,12 @@ body {
 .app-container {
     width: 100%;
     height: 100%;
-    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
-/* === ЭКРАНЫ (Общие стили) === */
 .screen {
     display: none;
     width: 100%;
@@ -49,294 +44,248 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 10px;
     box-sizing: border-box;
-    padding: 20px;
 }
 
 .screen.active {
     display: flex;
 }
 
-/* === МЕНЮ (АДАПТИВНОЕ) === */
+/* === МЕНЮ (ЧИСТОЕ) === */
 .menu-panel {
     background-color: var(--panel-yellow);
     border: 4px solid var(--border-black);
-    box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
-    padding: 30px;
-    width: 90%;          /* Ширина 90% экрана */
-    max-width: 350px;    /* Но не больше 350px */
+    box-shadow: 10px 10px 0px 0px black;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 360px; /* Компактное меню */
     transform: rotate(-2deg);
-    text-align: left;
+    text-align: center;
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    box-sizing: border-box;
+    gap: 20px;
 }
 
 .logo-area h1 {
     font-family: 'Anton', sans-serif;
-    font-size: 3.5rem;   /* Чуть меньше для мобилок */
+    font-size: 3.5rem;
     line-height: 0.9;
-    text-transform: uppercase;
     margin: 0;
+    text-transform: uppercase;
 }
 
+.subtitle {
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+    margin-top: 5px;
+}
+
+.version-tag {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.6rem;
+    opacity: 0.5;
+}
+
+/* Поля ввода */
 .input-retro {
     width: 100%;
-    padding: 15px; /* Удобно для пальца */
+    padding: 15px;
     border: 3px solid black;
     font-family: 'Space Mono';
     font-size: 1rem;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     box-sizing: border-box;
-    border-radius: 0; /* Убираем скругление iOS */
-    -webkit-appearance: none;
+    text-align: center;
+    border-radius: 0;
 }
 
+/* Кнопки */
 .retro-btn {
     width: 100%;
-    padding: 18px; /* Кнопки побольше для пальца */
+    padding: 18px;
     font-family: 'Space Mono', monospace;
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     border: 3px solid black;
     box-shadow: 4px 4px 0px 0px black;
     cursor: pointer;
-    text-align: center;
-    color: white;
     text-transform: uppercase;
-    box-sizing: border-box;
+    color: white;
+    margin-bottom: 10px;
 }
 .retro-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px 0px black; }
+
 .btn-start { background: var(--btn-red); }
 .btn-market { background: var(--btn-green); }
+.btn-options { background: var(--btn-blue); } /* СИНЯЯ КНОПКА */
+
+.nsfw-toggle-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+.nsfw-toggle-menu input {
+    width: 20px; height: 20px; accent-color: var(--btn-red);
+}
 
 /* === ЛОББИ === */
 .lobby-card {
     background: var(--card-white);
-    border: 4px solid var(--border-black);
-    box-shadow: 8px 8px 0px 0px var(--border-black);
+    border: 4px solid black;
+    box-shadow: 8px 8px 0px 0px black;
     padding: 20px;
     width: 90%;
     max-width: 400px;
     text-align: center;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+}
+.room-badge {
+    background: var(--panel-yellow);
+    border: 2px solid black;
+    display: inline-block;
+    padding: 5px 10px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+.player-list-container {
+    text-align: left;
+    margin: 20px 0;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
-/* === ИГРОВОЙ ЭКРАН (МОБИЛЬНАЯ ВЕРСТКА) === */
+/* === ИГРА (АДАПТАЦИЯ ПОД 6 ИГРОКОВ) === */
 .game-layout {
-    width: 100%;
-    height: 100%;
-    padding: 10px;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Распределяем верх, центр и низ */
+    justify-content: space-between;
+    padding: 10px 5px; /* Уменьшил отступы по бокам */
 }
 
-/* 1. Верхняя панель (Компактная) */
 .game-header {
     background: var(--panel-yellow);
-    border: 3px solid var(--border-black);
+    border: 3px solid black;
     box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.5);
     padding: 10px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
     width: 100%;
     box-sizing: border-box;
-    font-size: 0.8rem; /* Шрифт поменьше */
+    font-weight: bold;
     z-index: 20;
-    margin-top: env(safe-area-inset-top); /* Отступ от "челки" айфона */
+    margin-top: env(safe-area-inset-top);
 }
 
-/* 2. Ситуация (Карточка вопроса) */
+.round-tag { background: black; color: white; padding: 2px 6px; font-size: 0.8rem; }
+
 .scenario-card-modern {
     background: var(--card-white);
-    border: 3px solid var(--border-black);
+    border: 3px solid black;
     box-shadow: 6px 6px 0px 0px rgba(0,0,0,0.5);
     width: 100%;
     transform: rotate(1deg);
     margin: 10px 0;
-    flex-shrink: 0; /* Не сжимать */
+    flex-shrink: 0;
 }
+.card-header-purple { background: var(--btn-blue); color: white; padding: 8px; font-weight: bold; font-size: 0.8rem; border-bottom: 3px solid black; }
+.card-body-white { padding: 15px; font-size: 0.9rem; font-weight: bold; text-align: center; text-transform: uppercase; min-height: 60px; display: flex; align-items: center; justify-content: center; }
 
-.card-header-purple {
-    background: var(--btn-blue);
-    color: white;
-    padding: 8px;
-    font-weight: bold;
-    border-bottom: 3px solid var(--border-black);
-    text-transform: uppercase;
-    font-size: 0.8rem;
-}
-
-.card-body-white {
-    padding: 15px;
-    font-size: 1rem; /* Оптимально для чтения с телефона */
-    line-height: 1.4;
-    font-weight: bold;
-    text-align: center;
-    text-transform: uppercase;
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* 3. Игровая зона (Стол) */
+/* Зона стола (куда выкладывают карты) */
 .table-area {
-    flex: 1; /* Занимает всё доступное место */
+    flex: 1;
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    overflow-y: auto; /* Если карт много - скролл */
+    justify-content: center; /* Центрируем карты */
     position: relative;
 }
 
 #status-text {
     background: black;
     color: var(--panel-yellow);
-    padding: 5px 10px;
+    padding: 4px 10px;
     margin-bottom: 10px;
+    font-size: 0.7rem;
     font-weight: bold;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    border-radius: 4px;
 }
 
+/* Контейнер карт на столе */
 #submissions-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    flex-wrap: wrap;       /* Разрешаем перенос на новую строку */
+    gap: 5px;              /* Маленький отступ */
     justify-content: center;
     width: 100%;
-    padding-bottom: 10px;
+    max-width: 600px;      /* Ограничение ширины, чтобы не разъезжались */
 }
 
-/* 4. Рука игрока (Фиксирована внизу) */
+/* === РУКА (НИЗ) === */
 #hand-area {
     width: 100%;
-    padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Отступ от полоски iPhone */
+    padding-bottom: env(safe-area-inset-bottom);
     z-index: 30;
+    text-align: center;
+}
+.hand-label {
+    background: black; color: white; display: inline-block; padding: 2px 8px; font-size: 0.7rem; margin-bottom: 5px;
 }
 
 #my-hand {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-start; /* Начинаем слева */
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
     align-items: flex-end;
-    gap: 0px; /* Карты накладываются */
     width: 100%;
-    overflow-x: auto; /* Горизонтальный скролл, если карт много */
-    padding: 20px 10px; /* Отступы для эффекта hover */
-    /* Скрываем скроллбар, но оставляем скролл */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    overflow-x: auto;
+    padding: 10px 0;
 }
-#my-hand::-webkit-scrollbar { display: none; } /* Chrome */
 
-/* === КАРТЫ (Адаптация под палец) === */
+/* === КАРТЫ === */
 .card {
     background: white;
-    /* Размеры чуть меньше для мобилок */
-    width: 100px;           
-    min-width: 100px;       
-    height: 140px;
-    padding: 6px 6px 25px 6px;
+    width: 90px;        /* Чуть меньше для мобилок */
+    min-width: 90px;
+    height: 130px;
+    padding: 5px 5px 20px 5px;
     box-sizing: border-box;
     border: 2px solid black;
     box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.4);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
+    display: flex; flex-direction: column; align-items: center;
     cursor: pointer;
     position: relative;
-    /* На мобильных hover работает плохо, поэтому эффекты при клике важнее */
+    margin-right: -15px; /* Наложение в руке */
     transition: transform 0.2s;
-    margin-right: -20px; /* Наложение карт веером */
 }
-
-/* Последняя карта не должна перекрываться следующей (ее нет) */
 .card:last-child { margin-right: 0; }
+.card img { width: 100%; height: 100%; object-fit: cover; border: 2px solid black; background: #ddd; pointer-events: none; }
+.card::after { content: 'MEME'; position: absolute; bottom: 3px; left: 5px; font-size: 0.5rem; font-weight: bold; opacity: 0.5; }
+.card:active { transform: translateY(-15px) !important; z-index: 100; border-color: var(--btn-blue); }
 
-.card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border: 2px solid #000;
-    background: #ddd;
-    pointer-events: none; /* Чтобы клик по картинке не мешал клику по карте */
-}
-
-.card::after {
-    content: 'MEME';
-    position: absolute;
-    bottom: 4px;
-    left: 6px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    font-weight: bold;
-    color: #000;
-    opacity: 0.5;
-}
-
-/* Активная карта (выбранная или при нажатии) */
-.card:active {
-    transform: translateY(-15px) scale(1.1) !important;
-    z-index: 100;
-    border-color: var(--btn-blue);
-}
-
-/* Карты на столе (чуть меньше, чтобы влезали) */
-.submission-card {
-    background: #111;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    width: 80px;
-    height: 110px;
-    margin-right: 0; /* На столе карты не накладываются */
-}
-
-/* Карта победителя (крупнее) */
-.judging-card {
-    transform: scale(1.1);
-    margin: 10px;
+/* Карты на столе (адаптация под 6 штук) */
+.submission-card, .judging-card {
+    width: 70px;         /* Еще компактнее для стола */
+    height: 100px;
     margin-right: 0;
+    font-size: 1.5rem;
+}
+.submission-card { background: #111; color: white; display: flex; align-items: center; justify-content: center; }
+
+/* Если карт много (6 игроков), они станут еще чуть меньше */
+@media (max-width: 400px) {
+    .submission-card, .judging-card { width: 60px; height: 90px; }
 }
 
-/* === ПЕРЕКЛЮЧАТЕЛЬ 18+ === */
-.nsfw-toggle {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--btn-red);
-}
-
-/* ПОДИУМ */
-.podium-place { 
-    padding: 15px; 
-    margin-bottom: 10px;
-    border: 3px solid black;
-    font-weight: bold; 
-    display: flex; justify-content: space-between; 
-    color: black;
-    box-shadow: 4px 4px 0 0 black;
-}
-.place-1 { background: #FFD700; transform: scale(1.05); }
+/* Подиум */
+.podium-place { padding: 10px; margin-bottom: 5px; border: 3px solid black; font-weight: bold; display: flex; justify-content: space-between; color: black; box-shadow: 4px 4px 0 0 black; }
+.place-1 { background: #FFD700; }
 .place-2 { background: #C0C0C0; }
 .place-3 { background: #CD7F32; color: white; }
