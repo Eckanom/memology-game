@@ -89,11 +89,18 @@ socket.on('syncSettings', (settings) => {
     });
 });
 
+// !!! ОБНОВЛЕННЫЙ СПИСОК ИГРОКОВ (С АВАТАРКАМИ И ЗВАНИЯМИ) !!!
 socket.on('updatePlayers', (players) => {
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
-        `<div style="border-bottom:2px solid black; padding:5px; display:flex; justify-content:space-between;">
-            <span>${p.username} ${p.isBot ? '🤖' : ''}</span>
+        `<div style="border-bottom:2px solid black; padding:5px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${p.avatar}" class="player-avatar">
+                <div style="display:flex; flex-direction:column; text-align:left;">
+                    <span>${p.username} ${p.isBot ? '🤖' : ''}</span>
+                    <span style="font-size:0.8rem; color:var(--btn-blue);">${p.title || ''}</span>
+                </div>
+            </div>
             <span>${p.score} 🏆</span>
         </div>`
     ).join('');
@@ -122,14 +129,11 @@ socket.on('timerStart', ({ duration }) => {
     
     container.style.display = 'block';
     
-    // Сбрасываем анимацию
     bar.style.transition = 'none';
     bar.style.width = '100%';
     
-    // Форсируем перерисовку (hack для перезапуска CSS анимации)
     void bar.offsetWidth;
 
-    // Запускаем анимацию
     bar.style.transition = `width ${duration}s linear`;
     bar.style.width = '0%';
 });
@@ -235,9 +239,7 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
         try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
     }
     
-    // Скрываем таймер
     document.getElementById('timer-container').style.display = 'none';
-
     document.getElementById('draw-btn').style.display = 'none';
     document.getElementById('status-text').innerHTML = isDraw ? "🤝 ДРУЖБА!" : `ПОБЕДИТЕЛЬ: ${winnerName}`;
     
@@ -250,6 +252,23 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
     } else {
         container.innerHTML = `<div style="font-size:3rem;">🤝</div>`;
     }
+
+    // Обновляем список, чтобы показать обновленные звания и очки
+    const list = document.getElementById('player-list');
+    if(list) {
+         list.innerHTML = players.map(p => 
+            `<div style="border-bottom:2px solid black; padding:5px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${p.avatar}" class="player-avatar">
+                    <div style="display:flex; flex-direction:column; text-align:left;">
+                        <span>${p.username} ${p.isBot ? '🤖' : ''}</span>
+                        <span style="font-size:0.8rem; color:var(--btn-blue);">${p.title || ''}</span>
+                    </div>
+                </div>
+                <span>${p.score} 🏆</span>
+            </div>`
+        ).join('');
+    }
 });
 
 socket.on('gameOver', (sortedPlayers) => {
@@ -258,8 +277,17 @@ socket.on('gameOver', (sortedPlayers) => {
     const list = document.getElementById('podium-list');
     list.innerHTML = sortedPlayers.map((p, i) => {
         let cls = i===0 ? 'place-1' : '';
+        // Добавляем аватарку в подиум
         return `<div class="podium-place ${cls}">
-            #${i+1} ${p.username} <span>${p.score}</span>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.5rem;">#${i+1}</span>
+                <img src="${p.avatar}" class="player-avatar" style="width:40px; height:40px;">
+                <div style="display:flex; flex-direction:column; text-align:left;">
+                    <span>${p.username}</span>
+                    <span style="font-size:0.8rem; opacity:0.7;">${p.title}</span>
+                </div>
+            </div>
+            <span>${p.score}</span>
         </div>`;
     }).join('');
 });
