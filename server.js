@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// Настройка CORS для Socket.io (важно для продакшена)
+// Настройка CORS для стабильности
 const io = new Server(server, {
     cors: {
         origin: "*",
@@ -14,7 +14,6 @@ const io = new Server(server, {
     }
 });
 
-// Раздаем статику из папки public
 app.use(express.static(path.join(__dirname, 'public')));
 
 // === БАЗА ДАННЫХ ВОПРОСОВ ===
@@ -437,7 +436,7 @@ const SCENARIO_DECKS = {
     ]
 };
 
-const TOTAL_IMAGES = 70; 
+const TOTAL_IMAGES = 50; 
 const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.jpg`);
 
 const rooms = {};
@@ -458,14 +457,18 @@ io.on('connection', (socket) => {
                 currentRound: 0, 
                 maxRounds: 15,
                 withBots: false,
-                activeDecks: ['everyday'], // По умолчанию
+                activeDecks: ['everyday'],
                 submissions: [],
                 usedScenarios: [],
-                deck: [...MEME_CARDS].sort(() => Math.random() - 0.5)
+                deck: [...MEME_CARDS].sort(() => Math.random() - 0.5),
+                createdAt: Date.now(), // Метка времени создания
+                lastActive: Date.now() // Метка последней активности
             };
         }
 
         const room = rooms[roomId];
+        room.lastActive = Date.now(); // Обновляем активность
+        
         const existingPlayer = room.players.find(p => p.id === socket.id);
         
         if (!existingPlayer) {
@@ -479,10 +482,8 @@ io.on('connection', (socket) => {
         }
 
         io.to(roomId).emit('updatePlayers', room.players);
-        // Синхронизация настроек
         socket.emit('syncSettings', { withBots: room.withBots, activeDecks: room.activeDecks });
 
-        // Если игра уже идет - подключаем
         if (room.gameState !== 'lobby') {
             const judge = room.players[room.currentJudgeIndex];
             socket.emit('newRound', {
@@ -505,19 +506,15 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ОБНОВЛЕНИЕ НАСТРОЕК
     socket.on('updateSettings', ({ roomId, withBots, activeDecks }) => {
         const room = rooms[roomId];
         if (room) {
+            room.lastActive = Date.now();
             room.withBots = withBots;
-            // Если ничего не выбрано, ставим Everyday
             room.activeDecks = activeDecks && activeDecks.length > 0 ? activeDecks : ['everyday'];
-            
-            // Если включили ботов в лобби - добавляем их сразу
             if (room.withBots && room.gameState === 'lobby') {
                 ensureMinimumPlayers(room);
             }
-
             io.to(roomId).emit('syncSettings', { withBots: room.withBots, activeDecks: room.activeDecks });
             io.to(roomId).emit('updatePlayers', room.players);
         }
@@ -527,9 +524,8 @@ io.on('connection', (socket) => {
         const room = rooms[roomId];
         if (!room) return;
         
+        room.lastActive = Date.now();
         console.log(`[GAME] Started game in room ${roomId}`);
-
-        // Если боты включены, но их еще нет (на всякий случай)
         if (room.withBots) ensureMinimumPlayers(room);
 
         if (room.players.length >= 3) {
@@ -542,6 +538,8 @@ io.on('connection', (socket) => {
     socket.on('submitCard', ({ roomId, card }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'selection') return;
+        room.lastActive = Date.now(); // Обновляем активность
+        
         if (room.submissions.find(s => s.playerId === socket.id)) return;
 
         processSubmission(room, socket.id, card);
@@ -551,6 +549,7 @@ io.on('connection', (socket) => {
     socket.on('declareDraw', ({ roomId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'judging') return;
+        room.lastActive = Date.now();
         
         room.submissions.forEach(sub => {
             const player = room.players.find(p => p.id === sub.playerId);
@@ -563,6 +562,7 @@ io.on('connection', (socket) => {
     socket.on('chooseWinner', ({ roomId, winnerSocketId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'judging') return;
+        room.lastActive = Date.now();
         resolveWinner(roomId, winnerSocketId);
     });
 
@@ -573,13 +573,12 @@ io.on('connection', (socket) => {
             const playerIndex = room.players.findIndex(p => p.id === socket.id);
             
             if (playerIndex !== -1) {
+                room.lastActive = Date.now();
                 const leavingPlayer = room.players[playerIndex];
                 
-                // Если игра в лобби - просто удаляем
                 if (room.gameState === 'lobby') {
                     room.players.splice(playerIndex, 1);
                 } else {
-                    // Если игра ИДЕТ - заменяем на бота
                     const botName = `${leavingPlayer.username} (Бот)`;
                     const bot = {
                         id: `bot-replace-${Date.now()}`,
@@ -589,8 +588,6 @@ io.on('connection', (socket) => {
                         hand: leavingPlayer.hand
                     };
                     room.players[playerIndex] = bot;
-                    
-                    // Если ушедший был судьей - активируем логику бота-судьи
                     if (room.currentJudgeIndex === playerIndex) {
                         setTimeout(() => checkRoundEnd(roomId), 1000); 
                     }
@@ -598,7 +595,6 @@ io.on('connection', (socket) => {
 
                 io.to(roomId).emit('updatePlayers', room.players);
                 
-                // Если остались одни боты или никого - удаляем комнату
                 const humanCount = room.players.filter(p => !p.isBot).length;
                 if (humanCount === 0) {
                     console.log(`[ROOM] Deleted empty room: ${roomId}`);
@@ -609,11 +605,47 @@ io.on('connection', (socket) => {
     });
 });
 
+// === АВТОМАТИЧЕСКАЯ ОЧИСТКА КЕША (РАЗ В ЧАС) ===
+const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 час
+const MAX_ROOM_LIFETIME = 2 * 60 * 60 * 1000; // 2 часа макс. жизнь комнаты без активности
+
+setInterval(() => {
+    console.log('[MAINTENANCE] Запуск очистки старых комнат...');
+    const now = Date.now();
+    let deletedCount = 0;
+
+    for (const roomId in rooms) {
+        const room = rooms[roomId];
+        
+        // Удаляем комнату, если в ней только боты
+        const humanCount = room.players.filter(p => !p.isBot).length;
+        
+        // Удаляем, если комната не активна уже долго
+        const isInactive = (now - room.lastActive) > MAX_ROOM_LIFETIME;
+
+        if (humanCount === 0 || isInactive) {
+            delete rooms[roomId];
+            deletedCount++;
+        }
+    }
+    
+    // Если нужно ЖЕСТКО очистить ВООБЩЕ ВСЁ (удалить даже активные игры):
+    // раскомментируй строку ниже, но игроки вылетят.
+    // if (deletedCount === 0) process.exit(0); 
+
+    console.log(`[MAINTENANCE] Очистка завершена. Удалено комнат: ${deletedCount}`);
+    
+    // Принудительный вызов сборщика мусора JS (если доступен), обычно не требуется, но для надежности:
+    if (global.gc) {
+        global.gc();
+    }
+}, CLEANUP_INTERVAL);
+
+
 // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
 
 function ensureMinimumPlayers(room) {
     let botCounter = 1;
-    // Добавляем ботов, пока игроков не станет 3
     while (room.players.length < 3) {
         room.players.push({
             id: `bot-${Date.now()}-${botCounter}`,
@@ -631,10 +663,7 @@ function processSubmission(room, playerId, card) {
     if (!player) return;
 
     room.submissions.push({ playerId: player.id, card: card, username: player.username });
-    
-    // Убираем сыгранную карту
     player.hand = player.hand.filter(c => c !== card);
-    // Даем новую
     const newCards = dealCards(room, 1);
     if (newCards.length > 0) player.hand.push(newCards[0]);
 }
@@ -652,7 +681,6 @@ function checkRoundEnd(roomId) {
             judge: judge.username
         });
 
-        // Если судья бот
         if (judge.isBot) {
             setTimeout(() => {
                 if (room.submissions.length > 0) {
@@ -698,7 +726,6 @@ function startRound(roomId) {
     room.gameState = 'selection';
     room.submissions = [];
 
-    // === СОБИРАЕМ ВОПРОСЫ ИЗ ВЫБРАННЫХ КОЛОД ===
     let pool = [];
     room.activeDecks.forEach(deckId => {
         if (SCENARIO_DECKS[deckId]) pool.push(...SCENARIO_DECKS[deckId]);
@@ -723,7 +750,6 @@ function startRound(roomId) {
         hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
     });
 
-    // Ход ботов
     if (room.withBots) {
         room.players.forEach(p => {
             if (p.isBot && p.id !== judge.id) {
