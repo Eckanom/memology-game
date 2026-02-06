@@ -474,6 +474,8 @@ io.on('connection', (socket) => {
         const existingPlayer = room.players.find(p => p.id === socket.id);
         
         if (!existingPlayer) {
+            // === ГЕНЕРАЦИЯ АВАТАРКИ ===
+            // Используем DiceBear API. Seed = username + timestamp для уникальности
             const avatarUrl = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${encodeURIComponent(username)}`;
 
             room.players.push({
@@ -482,12 +484,13 @@ io.on('connection', (socket) => {
                 score: 0,
                 isBot: false,
                 hand: dealCards(room, 5),
-                avatar: avatarUrl, 
-                title: 'Новичок', 
-                winStreak: 0      
+                avatar: avatarUrl, // Храним ссылку на аватар
+                title: 'Новичок', // Начальное звание
+                winStreak: 0      // Серия побед
             });
         }
 
+        // Обновляем звания сразу (чтобы ведущий получил звание Судья)
         calculateTitles(room);
 
         io.to(roomId).emit('updatePlayers', room.players);
@@ -512,22 +515,6 @@ io.on('connection', (socket) => {
                     judge: judge.username
                 });
             }
-        }
-    });
-
-    socket.on('sendReaction', ({ roomId, emoji }) => {
-        const room = rooms[roomId];
-        if (room) {
-            io.to(roomId).emit('showReaction', { emoji });
-        }
-    });
-
-    // === НОВАЯ ФИЧА: SOUNDBOARD ===
-    socket.on('playSoundEffect', ({ roomId, soundName }) => {
-        const room = rooms[roomId];
-        if (room) {
-            // Отправляем команду воспроизвести звук ВСЕМ в комнате
-            io.to(roomId).emit('triggerSound', { soundName });
         }
     });
 
@@ -578,6 +565,7 @@ io.on('connection', (socket) => {
         
         clearTimeout(room.timer);
 
+        // При ничьей сбрасываем стрики
         room.players.forEach(p => p.winStreak = 0);
 
         room.submissions.forEach(sub => {
@@ -617,7 +605,7 @@ io.on('connection', (socket) => {
                         score: leavingPlayer.score,
                         isBot: true,
                         hand: leavingPlayer.hand,
-                        avatar: leavingPlayer.avatar, 
+                        avatar: leavingPlayer.avatar, // Сохраняем аватар
                         title: leavingPlayer.title,
                         winStreak: leavingPlayer.winStreak
                     };
@@ -670,32 +658,39 @@ setInterval(() => {
 function calculateTitles(room) {
     if (room.players.length === 0) return;
 
+    // Находим макс и мин очки
     const maxScore = Math.max(...room.players.map(p => p.score));
     const minScore = Math.min(...room.players.map(p => p.score));
     
     room.players.forEach((p, index) => {
+        // Сначала сбрасываем, если не особое условие
         p.title = ''; 
 
+        // 1. Судья
         if (index === room.currentJudgeIndex) {
             p.title = '⚖️ Судья';
             return;
         }
 
+        // 2. Стрик (Тащер)
         if (p.winStreak >= 2) {
             p.title = '🔥 Тащер';
             return;
         }
 
+        // 3. Лидер
         if (p.score === maxScore && p.score > 0) {
             p.title = '👑 Лидер';
             return;
         }
 
+        // 4. Нуб (если игра идет уже какое-то время)
         if (p.score === minScore && room.currentRound > 3) {
             p.title = '🤡 Нуб';
             return;
         }
 
+        // По умолчанию
         if (!p.title) p.title = 'Игрок';
     });
 }
@@ -757,7 +752,7 @@ function ensureMinimumPlayers(room) {
             score: 0,
             isBot: true,
             hand: dealCards(room, 5),
-            avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${botName}`,
+            avatar: `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${botName}`, // Бот тоже получает аватар
             title: '🤖 Бот',
             winStreak: 0
         });
@@ -809,11 +804,13 @@ function resolveWinner(roomId, winnerId) {
     const room = rooms[roomId];
     if (room.timer) clearTimeout(room.timer); 
     
+    // Обновляем стрики
     room.players.forEach(p => {
         if (p.id === winnerId) {
             p.score += 1;
             p.winStreak += 1;
         } else {
+            // Судья не теряет стрик, остальные теряют
             if (room.players[room.currentJudgeIndex].id !== p.id) {
                 p.winStreak = 0;
             }
@@ -830,6 +827,7 @@ function finishRound(roomId, winnerName, winCard, isDraw) {
     const room = rooms[roomId];
     room.gameState = 'result';
     
+    // ПЕРЕСЧИТЫВАЕМ ЗВАНИЯ ПЕРЕД ОТПРАВКОЙ РЕЗУЛЬТАТОВ
     calculateTitles(room);
 
     io.to(roomId).emit('roundResult', { winnerName, winningCard: winCard, players: room.players, isDraw });
@@ -840,8 +838,9 @@ function finishRound(roomId, winnerName, winCard, isDraw) {
             io.to(roomId).emit('gameOver', sortedPlayers);
         } else {
             room.currentJudgeIndex = (room.currentJudgeIndex + 1) % room.players.length;
+            // Обновляем звания снова, чтобы судья получил ⚖️
             calculateTitles(room);
-            io.to(roomId).emit('updatePlayers', room.players);
+            io.to(roomId).emit('updatePlayers', room.players); // Обновляем клиент, чтобы звания сменились
             startRound(roomId);
         }
     }, 5000);
