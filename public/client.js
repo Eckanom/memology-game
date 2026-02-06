@@ -17,6 +17,29 @@ function playSound(name) {
     }
 }
 
+// === ЭМОДЗИ ===
+function sendEmoji(emoji) {
+    if (currentRoomId) {
+        socket.emit('sendEmoji', { roomId: currentRoomId, emoji: emoji });
+    }
+}
+
+socket.on('receiveEmoji', (emoji) => {
+    spawnFloatingEmoji(emoji);
+});
+
+function spawnFloatingEmoji(emoji) {
+    const el = document.createElement('div');
+    el.innerText = emoji;
+    el.className = 'floating-emoji';
+    el.style.left = Math.random() * 80 + 10 + '%'; // Случайная позиция по горизонтали
+    document.getElementById('floating-emojis').appendChild(el);
+    
+    // Удаляем через 2 секунды (время анимации)
+    setTimeout(() => { el.remove(); }, 2000);
+}
+
+// === УПРАВЛЕНИЕ НАСТРОЙКАМИ ===
 function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
     playSound('click');
@@ -55,6 +78,7 @@ function updateGameSettings() {
 let myId = '';
 let currentRoomId = '';
 let isJudge = false;
+let timerInterval = null;
 
 const screens = {
     login: document.getElementById('login-screen'),
@@ -115,11 +139,40 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
+// === ТАЙМЕР ===
+socket.on('timerUpdate', (timeLeft) => {
+    startClientTimer(timeLeft);
+});
+
+function startClientTimer(seconds) {
+    const bar = document.getElementById('timer-bar');
+    if(timerInterval) clearInterval(timerInterval);
+    
+    let current = seconds;
+    const max = 60; // Полное время раунда
+    
+    bar.style.width = (current / max * 100) + '%';
+    bar.style.backgroundColor = 'var(--btn-green)';
+    
+    timerInterval = setInterval(() => {
+        current--;
+        bar.style.width = (current / max * 100) + '%';
+        
+        if(current < 20) bar.style.backgroundColor = 'var(--btn-red)';
+        
+        if (current <= 0) {
+            clearInterval(timerInterval);
+        }
+    }, 1000);
+}
+
+socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands, timeLeft }) => {
     showScreen('game');
     playSound('card');
     myId = socket.id;
     isJudge = (myId === judgeId);
+
+    if (timeLeft) startClientTimer(timeLeft); // Запуск таймера
 
     document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
     
@@ -128,8 +181,6 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
     badge.innerText = isJudge 
         ? `ТЫ СУДЬЯ (${playerCount})` 
         : `ТЫ ИГРОК (${playerCount})`;
-    
-    // === ВАЖНО: УБРАНА СМЕНА ЦВЕТА, ТЕПЕРЬ ВСЕГДА ЧЕРНЫЙ ЧЕРЕЗ CSS ===
     badge.style.color = "black"; 
 
     document.getElementById('scenario-text').innerText = scenario;
@@ -177,6 +228,10 @@ socket.on('updateSubmissionsCount', (count) => {
 
 socket.on('gameState', (state) => {
     if (state.state === 'judging') {
+        // Останавливаем таймер
+        if(timerInterval) clearInterval(timerInterval);
+        document.getElementById('timer-bar').style.width = '0%';
+
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
         document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : "СУДЬЯ ВЫБИРАЕТ...";
@@ -212,6 +267,8 @@ socket.on('gameState', (state) => {
 
 socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
     playSound('win');
+    if(timerInterval) clearInterval(timerInterval);
+    
     if (!isDraw) {
         try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
     }
