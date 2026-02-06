@@ -16,7 +16,6 @@
     --border-black: #000000;
 }
 
-/* === ГЛАВНОЕ ИСПРАВЛЕНИЕ: ПРИМЕНЯЕМ ШРИФТ КО ВСЕМУ === */
 * {
     font-family: 'BadaBoom BB', 'Impact', sans-serif !important;
     letter-spacing: 1px;
@@ -80,20 +79,18 @@ body {
 }
 .subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: black;}
 
-/* ПОЛЯ ВВОДА (Исправлено) */
 .input-retro {
     width: 100%;
     padding: 15px;
     border: 3px solid black;
-    font-size: 1.5rem; /* Шрифт крупнее */
+    font-size: 1.5rem;
     margin-bottom: 10px;
     box-sizing: border-box;
     text-align: center;
     border-radius: 0;
-    text-transform: uppercase; /* Вводимый текст сразу капсом */
+    text-transform: uppercase;
 }
 
-/* Цвет плейсхолдера (подсказки) */
 .input-retro::placeholder {
     color: rgba(0, 0, 0, 0.5);
     font-family: 'BadaBoom BB', sans-serif;
@@ -140,6 +137,15 @@ body {
     display: inline-block;
 }
 .player-list-container { text-align: left; margin: 20px 0; font-size: 1.2rem; }
+
+/* АВАТАРКА ИГРОКА */
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid black;
+    background: white;
+}
 
 /* === ИГРА === */
 .game-layout {
@@ -223,10 +229,9 @@ body {
     border-bottom: 3px solid black; 
 }
 
-/* ТЕКСТ СИТУАЦИИ (Исправлено) */
 .card-body-white { 
     padding: 15px; 
-    font-size: 1.5rem; /* Крупнее для BadaBoom */
+    font-size: 1.5rem;
     text-align: center; 
     text-transform: uppercase; 
     min-height: 60px; 
@@ -304,7 +309,6 @@ body {
 .modal-card h2 { margin-top: 0; font-size: 3.5rem; margin-bottom: 20px; line-height: 1; }
 .setting-item { margin-bottom: 20px; text-align: left; font-size: 1.2rem; }
 
-/* Чекбоксы в настройках */
 .deck-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
