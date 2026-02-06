@@ -16,15 +16,17 @@
     --border-black: #000000;
 }
 
+/* === ГЛАВНОЕ ИСПРАВЛЕНИЕ: ПРИМЕНЯЕМ ШРИФТ КО ВСЕМУ === */
+* {
+    font-family: 'BadaBoom BB', 'Impact', sans-serif !important;
+    letter-spacing: 1px;
+}
+
 body {
     background-color: var(--bg-green);
     background-image: radial-gradient(#ffffff 1px, transparent 1px);
     background-size: 20px 20px;
     background-blend-mode: overlay;
-    
-    font-family: 'BadaBoom BB', 'Impact', sans-serif;
-    letter-spacing: 1px;
-    
     margin: 0;
     height: 100vh;
     overflow: hidden;
@@ -69,25 +71,33 @@ body {
 }
 
 .logo-area h1 {
-    font-size: 4.5rem; /* Шрифт BadaBoom меньше по высоте, увеличиваем */
+    font-size: 4.5rem;
     line-height: 0.9;
     margin: 0;
     text-transform: uppercase;
     text-shadow: 3px 3px 0px white;
     color: black;
 }
-.subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; font-weight: normal; color: black;}
+.subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: black;}
 
+/* ПОЛЯ ВВОДА (Исправлено) */
 .input-retro {
     width: 100%;
     padding: 15px;
     border: 3px solid black;
-    font-family: 'BadaBoom BB'; /* Шрифт в полях ввода */
-    font-size: 1.2rem;
+    font-size: 1.5rem; /* Шрифт крупнее */
     margin-bottom: 10px;
     box-sizing: border-box;
     text-align: center;
     border-radius: 0;
+    text-transform: uppercase; /* Вводимый текст сразу капсом */
+}
+
+/* Цвет плейсхолдера (подсказки) */
+.input-retro::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-family: 'BadaBoom BB', sans-serif;
+    text-transform: uppercase;
 }
 
 .nsfw-toggle-menu { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; color: black; }
@@ -96,8 +106,7 @@ body {
 .retro-btn {
     width: 100%;
     padding: 15px;
-    font-family: 'BadaBoom BB';
-    font-size: 1.5rem; /* Крупный текст кнопок */
+    font-size: 1.8rem;
     border: 3px solid black;
     box-shadow: 4px 4px 0px 0px black;
     cursor: pointer;
@@ -182,13 +191,12 @@ body {
     background: black; 
     color: white; 
     padding: 3px 8px; 
-    font-size: 1.2rem; /* Увеличил, так как шрифт компактный */
+    font-size: 1.2rem; 
 }
 
-/* === ВАЖНО: ЧЕРНЫЙ ЦВЕТ РОЛИ === */
 .role-badge { 
     margin-left: 5px; 
-    color: black !important; /* Принудительно черный */
+    color: black !important; 
     font-size: 1.3rem; 
 }
 
@@ -214,9 +222,11 @@ body {
     font-size: 1.2rem; 
     border-bottom: 3px solid black; 
 }
+
+/* ТЕКСТ СИТУАЦИИ (Исправлено) */
 .card-body-white { 
     padding: 15px; 
-    font-size: 1.3rem; /* Вопросы крупнее */
+    font-size: 1.5rem; /* Крупнее для BadaBoom */
     text-align: center; 
     text-transform: uppercase; 
     min-height: 60px; 
@@ -263,7 +273,7 @@ body {
 .card:last-child { margin-right: 0; }
 .card:hover, .card:active { transform: translateY(-20px) !important; z-index: 100; border-color: var(--btn-blue); }
 .card img { width: 100%; height: 100%; object-fit: cover; border: 2px solid black; background: #ddd; pointer-events: none; }
-.card::after { content: 'MEME'; position: absolute; bottom: 3px; left: 5px; font-size: 0.8rem; opacity: 0.5; font-family: 'BadaBoom BB'; }
+.card::after { content: 'MEME'; position: absolute; bottom: 3px; left: 5px; font-size: 0.8rem; opacity: 0.5; }
 
 .podium-place { padding: 10px; margin-bottom: 5px; border: 3px solid black; display: flex; justify-content: space-between; color: black; box-shadow: 4px 4px 0 0 black; background: white; font-size: 1.3rem; }
 .place-1 { background: #FFD700; }
