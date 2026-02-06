@@ -3,50 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мемология MVP</title>
+    <title>Memeology: Ultimate</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
 
-    <div id="login-screen" class="screen active">
-        <h1>😂 Мемология</h1>
-        <div class="form-container">
-            <input type="text" id="username" placeholder="Твое имя" maxlength="15">
-            <input type="text" id="room" placeholder="ID Комнаты (напр. 'mem1')" maxlength="10">
-            <button onclick="joinGame()">Войти</button>
-        </div>
-    </div>
-
-    <div id="lobby-screen" class="screen">
-        <h2>Комната: <span id="room-display"></span></h2>
-        <div id="player-list"></div>
-        <p class="status">Ожидание игроков (минимум 3)...</p>
-        <button id="start-btn" onclick="startGame()" style="display:none;">Начать игру</button>
-    </div>
-
-    <div id="game-screen" class="screen">
-        <div class="header">
-            <div class="role-badge" id="role-badge">Игрок</div>
-            <div class="score-board" id="score-board"></div>
-        </div>
-
-        <div class="scenario-card">
-            <h3>СИТУАЦИЯ:</h3>
-            <p id="scenario-text">Загрузка...</p>
-        </div>
-
-        <div id="game-area">
-            <div class="table-area">
-                <p id="status-text">Ожидание хода игроков...</p>
-                <div id="submissions-container" class="cards-row"></div>
+    <div class="app-container">
+        
+        <div id="login-screen" class="screen active">
+            <div class="logo-area">
+                <h1 class="glitch-text">MEMEOLOGY</h1>
+                <span class="subtitle">ULTIMATE EDITION</span>
             </div>
-
-            <div id="hand-area">
-                <p>Твои карты:</p>
-                <div id="my-hand" class="cards-row"></div>
+            <div class="card-panel">
+                <input type="text" id="username" placeholder="Твой никнейм" maxlength="15">
+                <input type="text" id="room" placeholder="ID Комнаты (напр. 777)" maxlength="10">
+                <button class="btn-primary" onclick="joinGame()">ВОЙТИ В ИГРУ</button>
             </div>
         </div>
+
+        <div id="lobby-screen" class="screen">
+            <div class="header">
+                <h2>КОМНАТА: <span id="room-display" class="highlight">...</span></h2>
+            </div>
+            <div class="lobby-container">
+                <div id="player-list" class="players-grid"></div>
+                <div class="lobby-status">
+                    <p class="pulse">Ожидание игроков...</p>
+                    <button id="start-btn" class="btn-primary" onclick="startGame()" style="display:none;">НАЧАТЬ РАУНД</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="game-header">
+                <div id="role-badge" class="badge">...</div>
+                <div class="score-ticker" id="score-board"></div>
+            </div>
+
+            <div class="game-table">
+                <div class="scenario-card">
+                    <div class="card-label">СИТУАЦИЯ</div>
+                    <p id="scenario-text">...</p>
+                </div>
+
+                <div class="table-center">
+                    <p id="status-text" class="status-message">...</p>
+                    <div id="submissions-container" class="cards-row"></div>
+                </div>
+            </div>
+
+            <div id="hand-area" class="hand-wrapper">
+                <div class="hand-label">ТВОИ КАРТЫ</div>
+                <div id="my-hand" class="hand-cards"></div>
+            </div>
+        </div>
+
     </div>
 
     <script src="client.js"></script>
