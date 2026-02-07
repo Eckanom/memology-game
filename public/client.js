@@ -221,7 +221,7 @@ function revealCards(packIndex) {
         const imgNum = startImg + i;
         const card = document.createElement('div');
         card.className = 'revealed-card';
-        card.innerHTML = `<img src="/memes/${imgNum}.jpg">`;
+        card.innerHTML = `<img src="/memes/${imgNum}.png">`; // ТУТ ИЗМЕНЕНИЕ
         if(i===9) {
             card.style.animationDelay = '2s'; // Редкая карта
             setTimeout(() => playSound('win'), 2000);
@@ -322,9 +322,7 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
-    // ОБНОВЛЕНИЕ СЧЕТЧИКА
-    document.getElementById('online-count').innerText = players.length;
-
+    // ТУТ УБРАН ОНЛАЙН СЧЕТЧИК, ЧТОБЫ НЕ БЫЛО ОШИБКИ
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
         `<div style="border-bottom:2px solid black; padding:5px; display:flex; align-items:center; justify-content:space-between;">
