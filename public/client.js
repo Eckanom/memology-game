@@ -3,17 +3,49 @@ const socket = io();
 // ГРОМКОСТЬ
 let currentVolume = 5;
 
+// === ОБЫЧНЫЕ ЗВУКИ ===
 const audio = {
     click: new Audio('/sounds/click.mp3'),
     card: new Audio('/sounds/card.mp3'),
-    win: new Audio('/sounds/win.mp3')
+    draw: new Audio('/sounds/draw.mp3') 
 };
 
+// === МАССИВЫ СЛУЧАЙНЫХ ЗВУКОВ ===
+
+// Звуки для победы в РАУНДЕ (win1.mp3, win2.mp3...)
+const winSounds = [
+    new Audio('/sounds/win1.mp3'),
+    new Audio('/sounds/win2.mp3'),
+    new Audio('/sounds/win3.mp3')
+];
+
+// Звуки для КОНЦА ИГРЫ (finish1.mp3, finish2.mp3...)
+const finishSounds = [
+    new Audio('/sounds/finish1.mp3'),
+    new Audio('/sounds/finish2.mp3')
+];
+
 function playSound(name) {
-    if(audio[name]) { 
-        audio[name].currentTime = 0; 
-        audio[name].volume = currentVolume / 10;
-        audio[name].play().catch(()=>{}); 
+    let soundToPlay;
+
+    if (name === 'win') {
+        // Случайный звук для победы в раунде
+        soundToPlay = winSounds[Math.floor(Math.random() * winSounds.length)];
+    } else if (name === 'finish') {
+        // Случайный звук для финала игры (НОВОЕ)
+        soundToPlay = finishSounds[Math.floor(Math.random() * finishSounds.length)];
+    } else {
+        // Обычный звук по имени
+        soundToPlay = audio[name];
+    }
+
+    if (soundToPlay) { 
+        soundToPlay.currentTime = 0; 
+        soundToPlay.volume = currentVolume / 10;
+        
+        soundToPlay.play().catch((e) => {
+            console.log("Звук не найден или заблокирован:", name);
+        }); 
     }
 }
 
@@ -33,7 +65,8 @@ function updateVolume(val) {
 }
 
 function testSound() {
-    playSound('win');
+    // Проверяем звук финала для теста, так интереснее
+    playSound('finish'); 
 }
 
 function leaveGame() {
@@ -89,7 +122,6 @@ socket.on('syncSettings', (settings) => {
     });
 });
 
-// !!! ОБНОВЛЕННЫЙ СПИСОК ИГРОКОВ (С АВАТАРКАМИ И ЗВАНИЯМИ) !!!
 socket.on('updatePlayers', (players) => {
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
@@ -122,7 +154,6 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-// === ТАЙМЕР ===
 socket.on('timerStart', ({ duration }) => {
     const container = document.getElementById('timer-container');
     const bar = document.getElementById('timer-bar');
@@ -234,8 +265,12 @@ socket.on('gameState', (state) => {
 });
 
 socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
-    playSound('win');
-    if (!isDraw) {
+    
+    // === ЛОГИКА ВЫБОРА ЗВУКА РАУНДА ===
+    if (isDraw) {
+        playSound('draw'); 
+    } else {
+        playSound('win'); 
         try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
     }
     
@@ -253,7 +288,6 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
         container.innerHTML = `<div style="font-size:3rem;">🤝</div>`;
     }
 
-    // Обновляем список, чтобы показать обновленные звания и очки
     const list = document.getElementById('player-list');
     if(list) {
          list.innerHTML = players.map(p => 
@@ -273,11 +307,13 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
 
 socket.on('gameOver', (sortedPlayers) => {
     showScreen('gameover');
-    playSound('win');
+    
+    // === ИГРАЕМ ФИНАЛЬНЫЙ ЗВУК ===
+    playSound('finish'); 
+    
     const list = document.getElementById('podium-list');
     list.innerHTML = sortedPlayers.map((p, i) => {
         let cls = i===0 ? 'place-1' : '';
-        // Добавляем аватарку в подиум
         return `<div class="podium-place ${cls}">
             <div style="display:flex; align-items:center; gap:10px;">
                 <span style="font-size:1.5rem;">#${i+1}</span>
