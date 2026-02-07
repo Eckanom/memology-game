@@ -34,22 +34,8 @@
                     <button class="retro-btn btn-shop" onclick="openShop()">МАГАЗИН</button>
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
-
-                <div id="menu-player-count" style="
-                    background: black;
-                    color: white;
-                    padding: 5px 10px;
-                    font-size: 1.3rem;
-                    border: 2px solid white;
-                    align-self: flex-start;
-                    margin-top: -10px;
-                    box-shadow: 2px 2px 0 0 rgba(0,0,0,0.5);
-                ">
-                    👥 <span id="online-count">0</span>
-                </div>
-
             </div>
-            <div class="version-tag">v2.6.0 Lobby Update</div>
+            <div class="version-tag">v2.7.0 Final UI Patch</div>
         </div>
 
         <div id="lobby-screen" class="screen">
@@ -64,9 +50,7 @@
                 <p id="lobby-status-text">ЖДЕМ ИГРОКОВ (3-6)...</p>
                 <button id="start-btn" class="retro-btn btn-green" onclick="startGame()" style="display:none;">НАЧАТЬ ИГРУ</button>
                 <button class="retro-btn btn-options" onclick="openSettings()" style="margin-top:10px; padding:10px;">⚙ НАСТРОЙКИ</button>
-                
                 <button class="retro-btn btn-orange" onclick="backFromLobby()">НАЗАД</button>
-
             </div>
         </div>
 
@@ -80,7 +64,7 @@
 
         <div id="pack-opening-overlay">
             <button class="close-pack-btn" onclick="closePackOpening()">X</button>
-            <h2 style="color:white; margin-bottom:20px; text-shadow:2px 2px 0 black;">ПОТЯНИ ЛЕНТУ ВПРАВО!</h2>
+            <h2 id="strip-text" style="color:white; margin-bottom:20px; text-shadow:2px 2px 0 black;">ПОТЯНИ ЛЕНТУ ВПРАВО!</h2>
             
             <div id="animated-pack" class="opening-pack">
                 <div id="tear-strip" class="tear-strip">
