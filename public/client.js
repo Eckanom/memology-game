@@ -1,9 +1,6 @@
 const socket = io();
-
-// ГРОМКОСТЬ
 let currentVolume = 5;
 
-// === ЗВУКИ ===
 const audio = {
     click: new Audio('/sounds/click.mp3'),
     card: new Audio('/sounds/card.mp3'),
@@ -12,13 +9,10 @@ const audio = {
     coins: new Audio('/sounds/coins.mp3')
 };
 
-// === МАССИВЫ ЗВУКОВ ===
 const winSounds = [];
 for (let i = 1; i <= 15; i++) winSounds.push(new Audio(`/sounds/win${i}.mp3`));
-
 const finishSounds = [];
 for (let i = 1; i <= 5; i++) finishSounds.push(new Audio(`/sounds/finish${i}.mp3`));
-
 let availableWinIndices = Array.from({ length: 15 }, (_, i) => i);
 
 function playSound(name) {
@@ -40,26 +34,19 @@ function playSound(name) {
     }
 }
 
-// === НОВАЯ ФУНКЦИЯ ДЛЯ ВНУТРИИГРОВЫХ УВЕДОМЛЕНИЙ ===
 function showPopup(text, onYes = null, showNo = false) {
     const modal = document.getElementById('custom-modal');
     const textEl = document.getElementById('modal-text');
     const btnYes = document.getElementById('modal-yes');
     const btnNo = document.getElementById('modal-no');
-
-    // Подготовка текста и кнопок
     textEl.innerText = text;
     modal.style.display = 'flex';
     playSound('click');
-
-    // Кнопка OK / ДА
     btnYes.onclick = () => {
         playSound('click');
         modal.style.display = 'none';
         if (onYes) onYes();
     };
-
-    // Кнопка ОТМЕНА (если нужна)
     if (showNo) {
         btnNo.style.display = 'block';
         btnNo.onclick = () => {
@@ -71,7 +58,6 @@ function showPopup(text, onYes = null, showNo = false) {
     }
 }
 
-// === ЭКОНОМИКА И МАГАЗИН ===
 let playerCoins = parseInt(localStorage.getItem('memeCoins')) || 0;
 let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0]; 
 
@@ -135,7 +121,6 @@ function buyPack(packIndex, price) {
     }
 }
 
-// --- АНИМАЦИЯ ОТКРЫТИЯ (СОКРАЩЕНИЕ ЛЕНТЫ) ---
 let isDragging = false;
 let startX = 0;
 
@@ -143,6 +128,7 @@ function startPackOpening(packIndex, price) {
     const overlay = document.getElementById('pack-opening-overlay');
     const pack = document.getElementById('animated-pack');
     const strip = document.getElementById('tear-strip');
+    const stripText = document.getElementById('strip-text'); // ТЕКСТ ЗАГОЛОВКА
     const cardsContainer = document.getElementById('revealed-cards');
     const collectBtn = document.getElementById('collect-btn');
     const closeBtn = document.querySelector('.close-pack-btn');
@@ -150,9 +136,9 @@ function startPackOpening(packIndex, price) {
     overlay.style.display = 'flex';
     pack.classList.remove('pack-slide-down');
     strip.style.display = 'flex';
-    
-    // Сброс обрезки (видно всю ленту)
     strip.style.clipPath = 'inset(0 0 0 0)'; 
+    
+    stripText.style.display = 'block'; // Показываем текст "Потяни..."
     
     cardsContainer.style.display = 'none';
     cardsContainer.innerHTML = '';
@@ -163,28 +149,22 @@ function startPackOpening(packIndex, price) {
         isDragging = true;
         startX = e.pageX || e.touches[0].pageX;
     };
-
     document.onmouseup = document.ontouchend = () => {
         if (!isDragging) return;
         isDragging = false;
-        // Если отпустил, но не дорвал - возвращаем ленту
         strip.style.transition = 'clip-path 0.3s ease-out';
         strip.style.clipPath = 'inset(0 0 0 0)';
     };
-
     document.onmousemove = document.ontouchmove = (e) => {
         if (!isDragging) return;
         const x = e.pageX || e.touches[0].pageX;
-        const diff = x - startX; // На сколько сдвинули вправо
-
+        const diff = x - startX;
         if (diff > 0) { 
-             // Вычисляем процент обрезки (ширина ленты ~220px)
              const percent = Math.min(100, (diff / 200) * 100);
-             strip.style.transition = 'none'; // Убираем анимацию для мгновенной реакции
-             strip.style.clipPath = `inset(0 0 0 ${percent}%)`; // Обрезаем слева
+             strip.style.transition = 'none'; 
+             strip.style.clipPath = `inset(0 0 0 ${percent}%)`; 
         }
-
-        if (diff > 200) { // Если оторвали полностью
+        if (diff > 200) { 
             isDragging = false;
             document.onmouseup = null;
             document.onmousemove = null;
@@ -199,10 +179,11 @@ function performRip(packIndex, price) {
     updateCoinDisplay();
 
     document.querySelector('.close-pack-btn').style.display = 'none';
+    document.getElementById('strip-text').style.display = 'none'; // СКРЫВАЕМ ТЕКСТ ПОСЛЕ РАЗРЫВА
+
     playSound('rip');
     const strip = document.getElementById('tear-strip');
     const pack = document.getElementById('animated-pack');
-    
     strip.style.display = 'none'; 
     
     setTimeout(() => {
@@ -217,14 +198,19 @@ function revealCards(packIndex) {
     const container = document.getElementById('revealed-cards');
     container.style.display = 'grid';
     const startImg = packIndex * 10 + 1;
+    
+    // Генерируем 10 карт (9 обычных + 1 редкая)
     for(let i=0; i<10; i++) {
         const imgNum = startImg + i;
         const card = document.createElement('div');
         card.className = 'revealed-card';
-        card.innerHTML = `<img src="/memes/${imgNum}.png">`;
-        if(i===9) {
-            card.style.animationDelay = '2s'; // Редкая карта
-            setTimeout(() => playSound('win'), 2000);
+        card.innerHTML = `<img src="/memes/${imgNum}.png">`; // Используем .png
+        
+        if (i === 9) {
+            // ПОСЛЕДНЯЯ КАРТА - РЕДКАЯ (ПОВЕРХ ЦЕНТРАЛЬНОЙ)
+            card.classList.add('rare-card'); 
+            card.style.animationDelay = '3s'; // Задержка 3 секунды
+            setTimeout(() => playSound('win'), 3000);
         } else {
             card.style.animationDelay = `${i * 0.1}s`;
         }
@@ -233,17 +219,17 @@ function revealCards(packIndex) {
     playSound('coins'); 
     ownedPacks.push(packIndex);
     localStorage.setItem('ownedPacks', JSON.stringify(ownedPacks));
+    
+    // Кнопка появляется после того, как выпадет редкая карта
     setTimeout(() => {
         document.getElementById('collect-btn').style.display = 'block';
-    }, 2500);
+    }, 3500);
 }
 
 function closePackOpening() {
     document.getElementById('pack-opening-overlay').style.display = 'none';
     renderShop();
 }
-
-// === СТАНДАРТНЫЕ ФУНКЦИИ ===
 
 function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
@@ -281,7 +267,7 @@ function updateGameSettings() {
 let myId = '';
 let currentRoomId = '';
 let isJudge = false;
-let isGameStarted = false; // ФЛАГ СОСТОЯНИЯ ИГРЫ
+let isGameStarted = false; 
 
 const screens = {
     login: document.getElementById('login-screen'),
@@ -315,14 +301,11 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
-// === НОВАЯ ФУНКЦИЯ: НАЗАД ИЗ ЛОББИ ===
 function backFromLobby() {
     playSound('click');
     if (isGameStarted) {
-        // Если игра уже идет - возвращаемся на стол
         showScreen('game');
     } else {
-        // Если еще не началась - выходим в меню (перезагрузка)
         location.reload(); 
     }
 }
@@ -335,9 +318,9 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
-    // ОБНОВЛЕНИЕ СЧЕТЧИКА
-    const countEl = document.getElementById('online-count');
-    if (countEl) countEl.innerText = players.length;
+    // Внимание: онлайн-счетчик удален из меню, здесь обновляем только в лобби (если он есть)
+    const onlineCountLobby = document.getElementById('online-count');
+    if(onlineCountLobby) onlineCountLobby.innerText = players.length;
 
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
@@ -354,13 +337,10 @@ socket.on('updatePlayers', (players) => {
     ).join('');
 
     const startBtn = document.getElementById('start-btn');
-    const status = document.getElementById('lobby-status-text');
     if (players.length >= 3) {
         startBtn.style.display = 'block';
-        status.innerText = "ГОТОВЫ К СТАРТУ!";
     } else {
         startBtn.style.display = 'none';
-        status.innerText = `ЖДЕМ ЕЩЕ ${3 - players.length} ИГРОКОВ...`;
     }
 });
 
@@ -369,29 +349,31 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
+// === ИСПРАВЛЕННЫЙ ТАЙМЕР ===
 socket.on('timerStart', ({ duration }) => {
     const bar = document.getElementById('timer-bar');
     document.getElementById('timer-container').style.display = 'block';
+    
+    // Сброс анимации для перезапуска
     bar.style.transition = 'none';
     bar.style.width = '100%';
-    void bar.offsetWidth;
+    void bar.offsetWidth; // Триггер перерисовки
+    
+    // Запуск новой анимации на оставшееся время
     bar.style.transition = `width ${duration}s linear`;
     bar.style.width = '0%';
 });
 
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
-    isGameStarted = true; // ИГРА НАЧАЛАСЬ
+    isGameStarted = true;
     showScreen('game');
     playSound('card');
     myId = socket.id;
     isJudge = (myId === judgeId);
     document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
-    const badge = document.getElementById('role-badge');
-    
-    // ТУТ СЧЕТЧИК ИГРОКОВ ВНУТРИ СТАТУСА
     const playerCount = hands.length;
+    const badge = document.getElementById('role-badge');
     badge.innerText = isJudge ? `ТЫ СУДЬЯ / ${playerCount}` : `ТЫ ИГРОК / ${playerCount}`;
-    
     badge.style.color = "black"; 
     document.getElementById('scenario-text').innerText = scenario;
     document.getElementById('submissions-container').innerHTML = '';
@@ -497,7 +479,7 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
 
 socket.on('gameOver', (sortedPlayers) => {
     showScreen('gameover');
-    isGameStarted = false; // ИГРА ОКОНЧЕНА
+    isGameStarted = false; // ИГРА ЗАКОНЧЕНА
     playSound('finish'); 
     const list = document.getElementById('podium-list');
     list.innerHTML = sortedPlayers.map((p, i) => {
