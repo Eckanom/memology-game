@@ -25,33 +25,23 @@ for (let i = 1; i <= 5; i++) {
 }
 
 // === ЛОГИКА "БЕЗ ПОВТОРОВ" ===
-// Создаем список индексов от 0 до 14 [0, 1, 2, ..., 14]
 let availableWinIndices = Array.from({ length: 15 }, (_, i) => i);
 
 function playSound(name) {
     let soundToPlay;
 
     if (name === 'win') {
-        // Если вдруг звуки закончились (сыграли > 15 раундов), наполняем список заново
         if (availableWinIndices.length === 0) {
             availableWinIndices = Array.from({ length: 15 }, (_, i) => i);
         }
-
-        // 1. Выбираем случайный номер ИЗ ОСТАВШИХСЯ
         const randomIndex = Math.floor(Math.random() * availableWinIndices.length);
         const soundIndex = availableWinIndices[randomIndex];
-
-        // 2. Берем этот звук
         soundToPlay = winSounds[soundIndex];
-
-        // 3. УДАЛЯЕМ этот индекс из доступных, чтобы он не повторился
         availableWinIndices.splice(randomIndex, 1);
 
     } else if (name === 'finish') {
-        // Для финала просто случайный из 5 (тут можно повторять, игра все равно кончилась)
         soundToPlay = finishSounds[Math.floor(Math.random() * finishSounds.length)];
     } else {
-        // Обычные звуки
         soundToPlay = audio[name];
     }
 
@@ -81,7 +71,7 @@ function updateVolume(val) {
 }
 
 function testSound() {
-    playSound('win'); // Проверяем работу системы
+    playSound('win'); 
 }
 
 function leaveGame() {
