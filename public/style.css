@@ -33,20 +33,20 @@ body {
     -webkit-user-select: none;
 }
 
-/* === ИСПРАВЛЕНИЕ: ОГРАНИЧЕНИЕ ИГРОВОЙ ЗОНЫ === */
+/* === ОГРАНИЧЕНИЕ ШИРИНЫ ДЛЯ ПК === */
 .app-container {
     width: 100%;
-    max-width: 500px; /* Ограничиваем ширину (как на телефоне) */
+    max-width: 500px;
     height: 100%;
-    margin: 0 auto; /* Центрируем блок по горизонтали */
+    margin: 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    border-left: 4px solid black; /* Границы слева и справа */
+    border-left: 4px solid black;
     border-right: 4px solid black;
-    box-shadow: 0 0 50px rgba(0,0,0,0.7); /* Тень, чтобы выделить зону на фоне */
-    background: rgba(0, 0, 0, 0.1); /* Легкое затемнение фона внутри игры */
+    box-shadow: 0 0 50px rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
 }
 
@@ -59,6 +59,7 @@ body {
     justify-content: center;
     padding: 10px;
     box-sizing: border-box;
+    position: relative;
 }
 .screen.active { display: flex; }
 
@@ -75,6 +76,17 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+}
+
+/* === ВЕРСИЯ ИГРЫ === */
+.version-tag {
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    color: black;
+    pointer-events: none;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
 }
 
 .logo-area h1 {
@@ -146,7 +158,6 @@ body {
 }
 .player-list-container { text-align: left; margin: 20px 0; font-size: 1.2rem; }
 
-/* АВАТАРКА ИГРОКА */
 .player-avatar {
     width: 40px;
     height: 40px;
