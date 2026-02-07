@@ -47,16 +47,19 @@ function showPopup(text, onYes = null, showNo = false) {
     const btnYes = document.getElementById('modal-yes');
     const btnNo = document.getElementById('modal-no');
 
+    // Подготовка текста и кнопок
     textEl.innerText = text;
     modal.style.display = 'flex';
     playSound('click');
 
+    // Кнопка OK / ДА
     btnYes.onclick = () => {
         playSound('click');
         modal.style.display = 'none';
         if (onYes) onYes();
     };
 
+    // Кнопка ОТМЕНА (если нужна)
     if (showNo) {
         btnNo.style.display = 'block';
         btnNo.onclick = () => {
@@ -71,7 +74,6 @@ function showPopup(text, onYes = null, showNo = false) {
 // === ЭКОНОМИКА И МАГАЗИН ===
 let playerCoins = parseInt(localStorage.getItem('memeCoins')) || 0;
 let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0]; 
-let lastScreen = 'login'; // Для возврата
 
 function updateCoinDisplay() {
     document.getElementById('coin-count').innerText = playerCoins;
@@ -86,14 +88,6 @@ function addCoins(amount) {
 }
 
 function openShop() {
-    // Запоминаем текущий активный экран
-    for (const [key, el] of Object.entries(screens)) {
-        if (el.classList.contains('active')) {
-            lastScreen = key;
-            break;
-        }
-    }
-    
     playSound('click');
     showScreen('shop');
     renderShop();
@@ -102,7 +96,14 @@ function openShop() {
 
 function backFromShop() {
     playSound('click');
-    showScreen(lastScreen);
+    if (currentRoomId && screens.game.classList.contains('active')) {
+        showScreen('game');
+    } else if (currentRoomId) {
+        showScreen('lobby');
+    } else {
+        showScreen('login');
+        document.getElementById('top-bar').style.display = 'none';
+    }
 }
 
 function renderShop() {
@@ -149,7 +150,10 @@ function startPackOpening(packIndex, price) {
     overlay.style.display = 'flex';
     pack.classList.remove('pack-slide-down');
     strip.style.display = 'flex';
+    
+    // Сброс обрезки (видно всю ленту)
     strip.style.clipPath = 'inset(0 0 0 0)'; 
+    
     cardsContainer.style.display = 'none';
     cardsContainer.innerHTML = '';
     collectBtn.style.display = 'none';
@@ -163,6 +167,7 @@ function startPackOpening(packIndex, price) {
     document.onmouseup = document.ontouchend = () => {
         if (!isDragging) return;
         isDragging = false;
+        // Если отпустил, но не дорвал - возвращаем ленту
         strip.style.transition = 'clip-path 0.3s ease-out';
         strip.style.clipPath = 'inset(0 0 0 0)';
     };
@@ -170,15 +175,16 @@ function startPackOpening(packIndex, price) {
     document.onmousemove = document.ontouchmove = (e) => {
         if (!isDragging) return;
         const x = e.pageX || e.touches[0].pageX;
-        const diff = x - startX;
+        const diff = x - startX; // На сколько сдвинули вправо
 
         if (diff > 0) { 
+             // Вычисляем процент обрезки (ширина ленты ~220px)
              const percent = Math.min(100, (diff / 200) * 100);
-             strip.style.transition = 'none'; 
-             strip.style.clipPath = `inset(0 0 0 ${percent}%)`; 
+             strip.style.transition = 'none'; // Убираем анимацию для мгновенной реакции
+             strip.style.clipPath = `inset(0 0 0 ${percent}%)`; // Обрезаем слева
         }
 
-        if (diff > 200) { 
+        if (diff > 200) { // Если оторвали полностью
             isDragging = false;
             document.onmouseup = null;
             document.onmousemove = null;
@@ -217,7 +223,7 @@ function revealCards(packIndex) {
         card.className = 'revealed-card';
         card.innerHTML = `<img src="/memes/${imgNum}.jpg">`;
         if(i===9) {
-            card.style.animationDelay = '2s'; 
+            card.style.animationDelay = '2s'; // Редкая карта
             setTimeout(() => playSound('win'), 2000);
         } else {
             card.style.animationDelay = `${i * 0.1}s`;
@@ -316,6 +322,7 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
+    // ОБНОВЛЕНИЕ СЧЕТЧИКА
     document.getElementById('online-count').innerText = players.length;
 
     const list = document.getElementById('player-list');
