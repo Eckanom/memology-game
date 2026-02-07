@@ -8,8 +8,8 @@ const audio = {
     click: new Audio('/sounds/click.mp3'),
     card: new Audio('/sounds/card.mp3'),
     draw: new Audio('/sounds/draw.mp3'),
-    rip: new Audio('/sounds/rip.mp3'),   // НОВЫЙ
-    coins: new Audio('/sounds/coins.mp3') // НОВЫЙ
+    rip: new Audio('/sounds/rip.mp3'),
+    coins: new Audio('/sounds/coins.mp3')
 };
 
 // === МАССИВЫ ЗВУКОВ ===
@@ -40,9 +40,8 @@ function playSound(name) {
     }
 }
 
-// === ЭКОНОМИКА И МАГАЗИН (НОВОЕ) ===
+// === ЭКОНОМИКА И МАГАЗИН ===
 let playerCoins = parseInt(localStorage.getItem('memeCoins')) || 0;
-// Индексы купленных паков (0 = базовый, 1-9 = платные)
 let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0]; 
 
 function updateCoinDisplay() {
@@ -50,7 +49,6 @@ function updateCoinDisplay() {
     document.getElementById('coin-balance').style.display = 'flex';
 }
 
-// Начисляем монеты за победу
 function addCoins(amount) {
     playerCoins += amount;
     localStorage.setItem('memeCoins', playerCoins);
@@ -58,41 +56,35 @@ function addCoins(amount) {
     playSound('coins');
 }
 
-// --- ЛОГИКА МАГАЗИНА ---
 function openShop() {
     playSound('click');
-    showScreen('shop'); // Показываем экран магазина
+    showScreen('shop');
     renderShop();
-    closeSettings(); // Если открыли из настроек
+    closeSettings();
 }
 
 function backFromShop() {
     playSound('click');
-    // Если мы в игре - возвращаемся в игру, иначе в лобби/логин
     if (currentRoomId && screens.game.classList.contains('active')) {
         showScreen('game');
     } else if (currentRoomId) {
         showScreen('lobby');
     } else {
         showScreen('login');
-        document.getElementById('coin-balance').style.display = 'none'; // Скрыть баланс на логине
+        document.getElementById('coin-balance').style.display = 'none';
     }
 }
 
 function renderShop() {
     const container = document.getElementById('shop-container');
     container.innerHTML = '';
-
-    // Генерируем 10 паков
     for (let i = 0; i < 10; i++) {
         const isOwned = ownedPacks.includes(i);
         const isDefault = i === 0;
         const price = 100;
-
         const packDiv = document.createElement('div');
         packDiv.className = `shop-pack ${isOwned ? 'owned' : ''}`;
         packDiv.onclick = () => buyPack(i, price);
-
         packDiv.innerHTML = `
             <div class="pack-title">${isDefault ? 'BASIC' : `PACK #${i+1}`}</div>
             <div style="font-size:2rem;">📦</div>
@@ -104,71 +96,80 @@ function renderShop() {
 }
 
 function buyPack(packIndex, price) {
-    if (ownedPacks.includes(packIndex)) return; // Уже куплено
-
+    if (ownedPacks.includes(packIndex)) return;
     if (playerCoins >= price) {
-        playerCoins -= price;
-        localStorage.setItem('memeCoins', playerCoins);
-        updateCoinDisplay();
-        
-        // Запускаем анимацию
-        startPackOpening(packIndex);
+        startPackOpening(packIndex, price);
     } else {
         alert("НЕ ХВАТАЕТ МОНЕТ!");
     }
 }
 
-// --- АНИМАЦИЯ ОТКРЫТИЯ (DRAG/SWIPE) ---
+// --- АНИМАЦИЯ ОТКРЫТИЯ (СВАЙП ВПРАВО) ---
 let isDragging = false;
-let startY = 0;
+let startX = 0;
 
-function startPackOpening(packIndex) {
+function startPackOpening(packIndex, price) {
     const overlay = document.getElementById('pack-opening-overlay');
     const pack = document.getElementById('animated-pack');
     const strip = document.getElementById('tear-strip');
     const cardsContainer = document.getElementById('revealed-cards');
     const collectBtn = document.getElementById('collect-btn');
+    const closeBtn = document.querySelector('.close-pack-btn');
 
-    // Сброс состояния
     overlay.style.display = 'flex';
     pack.classList.remove('pack-slide-down');
     strip.style.display = 'flex';
+    strip.style.transform = 'translateX(0)';
     cardsContainer.style.display = 'none';
     cardsContainer.innerHTML = '';
     collectBtn.style.display = 'none';
-    
-    // Логика свайпа
+    closeBtn.style.display = 'flex'; 
+
     strip.onmousedown = strip.ontouchstart = (e) => {
         isDragging = true;
-        startY = e.pageY || e.touches[0].pageY;
+        startX = e.pageX || e.touches[0].pageX;
+        strip.style.transition = 'none';
     };
 
-    document.onmouseup = document.ontouchend = () => { isDragging = false; };
+    document.onmouseup = document.ontouchend = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        strip.style.transition = 'transform 0.3s ease-out';
+        strip.style.transform = 'translateX(0)';
+    };
 
     document.onmousemove = document.ontouchmove = (e) => {
         if (!isDragging) return;
-        const y = e.pageY || e.touches[0].pageY;
-        const diff = y - startY;
+        const x = e.pageX || e.touches[0].pageX;
+        const diff = x - startX;
 
-        if (diff > 50) { // Если протащили вниз больше 50px
+        if (diff > 0) { 
+             strip.style.transform = `translateX(${diff}px)`;
+        }
+
+        if (diff > 150) { 
             isDragging = false;
-            performRip(packIndex);
+            document.onmouseup = null;
+            document.onmousemove = null;
+            performRip(packIndex, price);
         }
     };
 }
 
-function performRip(packIndex) {
+function performRip(packIndex, price) {
+    playerCoins -= price;
+    localStorage.setItem('memeCoins', playerCoins);
+    updateCoinDisplay();
+
+    document.querySelector('.close-pack-btn').style.display = 'none';
     playSound('rip');
     const strip = document.getElementById('tear-strip');
     const pack = document.getElementById('animated-pack');
     
-    strip.style.display = 'none'; // Скрываем хлястик
+    strip.style.display = 'none'; 
     
-    // Пак уезжает вниз
     setTimeout(() => {
         pack.classList.add('pack-slide-down');
-        
-        // Показываем карты
         setTimeout(() => {
             revealCards(packIndex);
         }, 500);
@@ -178,37 +179,25 @@ function performRip(packIndex) {
 function revealCards(packIndex) {
     const container = document.getElementById('revealed-cards');
     container.style.display = 'flex';
-    
-    // Показываем 3 случайные карты из этого пака (визуально)
-    // Реально мы просто добавляем пак в инвентарь
-    // Пак 0 = 1-10, Пак 1 = 11-20 и т.д.
     const startImg = packIndex * 10 + 1;
-    
     for(let i=0; i<3; i++) {
         const imgNum = startImg + i;
         const card = document.createElement('div');
         card.className = 'revealed-card';
         card.innerHTML = `<img src="/memes/${imgNum}.jpg">`;
-        // Задержка анимации для каждой карты
         card.style.animationDelay = `${i * 0.2}s`;
         container.appendChild(card);
     }
-
-    playSound('coins'); // Звук успеха
-    
-    // Сохраняем покупку
+    playSound('coins'); 
     ownedPacks.push(packIndex);
     localStorage.setItem('ownedPacks', JSON.stringify(ownedPacks));
-    
     document.getElementById('collect-btn').style.display = 'block';
 }
 
 function closePackOpening() {
     document.getElementById('pack-opening-overlay').style.display = 'none';
-    renderShop(); // Обновляем магазин (пак станет серым)
+    renderShop();
 }
-
-// === СТАНДАРТНЫЕ ФУНКЦИИ ===
 
 function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
@@ -252,18 +241,16 @@ const screens = {
     lobby: document.getElementById('lobby-screen'),
     game: document.getElementById('game-screen'),
     gameover: document.getElementById('gameover-screen'),
-    shop: document.getElementById('shop-screen') // Добавили экран магазина
+    shop: document.getElementById('shop-screen')
 };
 
 function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
-    
-    // Показываем монеты везде, кроме логина
     if (name === 'login') {
         document.getElementById('coin-balance').style.display = 'none';
     } else {
-        updateCoinDisplay(); // Обновить и показать
+        updateCoinDisplay();
     }
 }
 
@@ -413,12 +400,10 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
         try { confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff4500', '#00c853', '#2962ff'] }); } catch(e){}
     }
     
-    // === НАЧИСЛЕНИЕ МОНЕТ ПОБЕДИТЕЛЮ ===
     const myPlayer = players.find(p => p.id === myId);
     if (myPlayer && myPlayer.username === winnerName) {
-        const reward = Math.floor(Math.random() * (30 - 10 + 1)) + 10; // 10-30 монет
+        const reward = Math.floor(Math.random() * (30 - 10 + 1)) + 10;
         addCoins(reward);
-        // Можно показать всплывающее сообщение "+25 монет"
         alert(`ТЫ ВЫИГРАЛ! +${reward} МОНЕТ 🪙`);
     }
 
