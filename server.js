@@ -463,7 +463,8 @@ io.on('connection', (socket) => {
                 deck: [...MEME_CARDS].sort(() => Math.random() - 0.5),
                 createdAt: Date.now(),
                 lastActive: Date.now(),
-                timer: null
+                timer: null,
+                timerStartTimestamp: 0 // ДЛЯ СИНХРОНИЗАЦИИ ТАЙМЕРА
             };
         }
 
@@ -510,6 +511,15 @@ io.on('connection', (socket) => {
                     submissions: room.submissions,
                     judge: judge.username
                 });
+            }
+            
+            // === ИСПРАВЛЕНО: СИНХРОНИЗАЦИЯ ТАЙМЕРА ДЛЯ НОВОГО ИГРОКА ===
+            if (room.timerStartTimestamp > 0) {
+                const elapsed = (Date.now() - room.timerStartTimestamp) / 1000;
+                const remaining = Math.max(0, TURN_TIMER_SECONDS - elapsed);
+                if (remaining > 0) {
+                     socket.emit('timerStart', { duration: remaining });
+                }
             }
         }
     });
@@ -802,13 +812,14 @@ function startRound(roomId) {
     }
 }
 
-// === ЛОГИКА ТАЙМЕРА ===
+// === ЛОГИКА ТАЙМЕРА (С ФИКСАЦИЕЙ ВРЕМЕНИ) ===
 function startRoundTimer(roomId, isJudgingPhase = false) {
     const room = rooms[roomId];
     if (!room) return;
 
     if (room.timer) clearTimeout(room.timer);
 
+    room.timerStartTimestamp = Date.now(); // Запоминаем время старта
     io.to(roomId).emit('timerStart', { duration: TURN_TIMER_SECONDS });
 
     room.timer = setTimeout(() => {
