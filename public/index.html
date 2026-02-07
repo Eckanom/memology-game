@@ -35,7 +35,7 @@
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
             </div>
-            <div class="version-tag">v2.5.0 PNG Update</div>
+            <div class="version-tag">v2.5.1 Status Update</div>
         </div>
 
         <div id="lobby-screen" class="screen">
@@ -45,6 +45,18 @@
                     КОМНАТА: <span id="room-display">...</span>
                 </div>
                 
+                <div id="menu-player-count" style="
+                    background: black;
+                    color: white;
+                    padding: 5px 10px;
+                    font-size: 1.3rem;
+                    border: 2px solid white;
+                    display: inline-block;
+                    margin-bottom: 15px;
+                ">
+                    👥 <span id="online-count">0</span>
+                </div>
+
                 <div id="player-list" class="player-list-container"></div>
 
                 <p id="lobby-status-text">ЖДЕМ ИГРОКОВ (3-6)...</p>
@@ -139,8 +151,6 @@
                 
                 <button class="retro-btn btn-shop" onclick="openShop()" style="margin-bottom:15px;">МАГАЗИН КАРТ</button>
 
-                <button class="retro-btn btn-blue" onclick="testSound()" style="margin-bottom:15px;">ПРОВЕРИТЬ ЗВУК</button>
-
                 <div class="setting-item">
                     <label>ГРОМКОСТЬ: <span id="volume-value">5</span></label>
                     <input type="range" id="volume-slider" min="0" max="10" value="5" oninput="updateVolume(this.value)">
@@ -165,6 +175,10 @@
                         <label><input type="checkbox" class="deck-check" value="trolls" onchange="updateGameSettings()"> Тролли</label>
                         <label style="color:red; font-weight:bold;"><input type="checkbox" class="deck-check" value="nsfw" onchange="updateGameSettings()"> NSFW 18+</label>
                     </div>
+                </div>
+
+                <div class="setting-item">
+                    <button class="retro-btn btn-blue" onclick="testSound()">ПРОВЕРИТЬ ЗВУК</button>
                 </div>
 
                 <button class="retro-btn btn-start" onclick="closeSettings()">ЗАКРЫТЬ</button>
