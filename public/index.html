@@ -29,11 +29,11 @@
                     <input type="text" id="room" class="input-retro" placeholder="НОМЕР КОМНАТЫ" maxlength="5">
                     
                     <button class="retro-btn btn-start" onclick="joinGame()">ВОЙТИ В ИГРУ</button>
-                    <button class="retro-btn btn-shop" onclick="openShop()">МАГАЗИН</button> 
+                    <button class="retro-btn btn-shop" onclick="openShop()">МАГАЗИН</button>
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
             </div>
-            <div class="version-tag">v2.1.0 Shop Update</div>
+            <div class="version-tag">v2.1.2 FINAL</div>
         </div>
 
         <div id="lobby-screen" class="screen">
@@ -54,22 +54,19 @@
         <div id="shop-screen" class="screen">
             <div class="lobby-card" style="max-width: 450px;">
                 <h2>МАГАЗИН КАРТ</h2>
-                <div class="shop-grid" id="shop-container">
-                    </div>
+                <div class="shop-grid" id="shop-container"></div>
                 <button class="retro-btn" style="background:black; margin-top:15px;" onclick="backFromShop()">НАЗАД</button>
             </div>
         </div>
 
         <div id="pack-opening-overlay">
-            <h2 style="color:white; margin-bottom:20px; text-shadow:2px 2px 0 black;">СВАЙПНИ, ЧТОБЫ ОТКРЫТЬ!</h2>
-            
+            <button class="close-pack-btn" onclick="closePackOpening()">X</button>
+            <h2 style="color:white; margin-bottom:20px; text-shadow:2px 2px 0 black;">ПОТЯНИ ЛЕНТУ ВПРАВО!</h2>
             <div id="animated-pack" class="opening-pack">
-                <div id="tear-strip" class="tear-strip">>>> ОТОРВАТЬ >>></div>
-                <div style="text-align:center; font-size:2rem; font-weight:bold;">MEME PACK</div>
+                <div id="tear-strip" class="tear-strip">>>> ТЯНИ СЮДА >>></div>
+                <div style="text-align:center; font-size:2rem; font-weight:bold; margin-top: 40px;">MEME PACK</div>
             </div>
-
             <div id="revealed-cards" class="revealed-cards-container"></div>
-            
             <button id="collect-btn" class="retro-btn btn-green" style="display:none; margin-top:20px; width:200px;" onclick="closePackOpening()">ЗАБРАТЬ</button>
         </div>
 
