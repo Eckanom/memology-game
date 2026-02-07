@@ -1,59 +1,4 @@
-/* ... (ВСЕ ПРЕДЫДУЩИЕ СТИЛИ ОСТАЮТСЯ) ... */
-
-/* === НОВЫЕ ПРАВКИ ДЛЯ КАРТ И ЛЕНТЫ === */
-
-.revealed-cards-container {
-    display: none;
-    display: grid; 
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    width: 100%;
-    max-width: 350px;
-    justify-items: center;
-    perspective: 1000px;
-    /* ПОДНИМАЕМ СЕТКУ ВВЕРХ (В РОЗОВУЮ ЗОНУ) */
-    margin-top: -350px; 
-    position: relative; /* Чтобы позиционировать 10-ю карту */
-}
-
-.revealed-card {
-    width: 70px; height: 100px;
-    background: white;
-    border: 2px solid white;
-    box-shadow: 0 0 10px rgba(255,255,255,0.3);
-    opacity: 0;
-    transform: translateY(50px) scale(0.5);
-    animation: cardPop 0.4s forwards;
-}
-.revealed-card img { width: 100%; height: 100%; object-fit: cover; }
-
-/* 10-я КАРТА (РЕДКАЯ) - ПОВЕРХ ЦЕНТРАЛЬНОЙ */
-.revealed-card.rare-card {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0); /* Сначала скрыта */
-    border: 4px solid #ffd700;
-    box-shadow: 0 0 40px #ffd700;
-    z-index: 20;
-    width: 90px; /* Чуть крупнее */
-    height: 130px;
-    animation: rarePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    /* Задержка анимации задается в JS */
-}
-
-@keyframes cardPop {
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes rarePop {
-    to { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
-}
-
-/* ОСТАЛЬНЫЕ СТИЛИ (ШРИФТЫ, КНОПКИ, ОВЕРЛЕЙ) - КОПИРУЙ ИЗ ПРОШЛОГО ОТВЕТА */
-/* ... (ВСТАВЬ СЮДА ПОЛНЫЙ CSS ИЗ ПРОШЛОГО ОТВЕТА, ЗАМЕНИВ БЛОК REVEALED CARDS НА ЭТОТ) ... */
-/* ЧТОБЫ НЕ ПУТАТЬСЯ, ВОТ ПОЛНЫЙ ФАЙЛ НИЖЕ */
-
+/* === ПОДКЛЮЧЕНИЕ ШРИФТА BADABOOM BB (Кириллица) === */
 @font-face {
     font-family: 'BadaBoom BB';
     src: url('https://db.onlinewebfonts.com/t/1f4728513903426767793d5f47f20235.woff2') format('woff2');
@@ -144,7 +89,7 @@ body {
 .tear-strip:active { cursor: grabbing; }
 .pack-slide-down { transform: translateY(150vh) rotate(10deg); }
 
-/* === НОВЫЙ БЛОК ДЛЯ КАРТ === */
+/* === НОВЫЙ БЛОК ДЛЯ КАРТ (ПОДНЯТ ВВЕРХ) === */
 .revealed-cards-container { display: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 350px; justify-items: center; perspective: 1000px; margin-top: -350px; position: relative; }
 .revealed-card { width: 70px; height: 100px; background: white; border: 2px solid white; box-shadow: 0 0 10px rgba(255,255,255,0.3); opacity: 0; transform: translateY(50px) scale(0.5); animation: cardPop 0.4s forwards; }
 .revealed-card img { width: 100%; height: 100%; object-fit: cover; }
