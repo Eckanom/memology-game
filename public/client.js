@@ -62,6 +62,7 @@ let playerCoins = parseInt(localStorage.getItem('memeCoins')) || 0;
 let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0]; 
 let lastMainScreen = 'login';
 let returnToOptions = false; 
+let currentTimerEnd = 0; // ВРЕМЯ ОКОНЧАНИЯ ТАЙМЕРА
 
 function updateCoinDisplay() {
     document.getElementById('coin-count').innerText = playerCoins;
@@ -133,7 +134,6 @@ function startPackOpening(packIndex, price) {
     const overlay = document.getElementById('pack-opening-overlay');
     const pack = document.getElementById('animated-pack');
     const strip = document.getElementById('tear-strip');
-    const stripText = document.getElementById('strip-text'); 
     const cardsContainer = document.getElementById('revealed-cards');
     const collectBtn = document.getElementById('collect-btn');
     const closeBtn = document.querySelector('.close-pack-btn');
@@ -142,8 +142,6 @@ function startPackOpening(packIndex, price) {
     pack.classList.remove('pack-slide-down');
     strip.style.display = 'flex';
     strip.style.clipPath = 'inset(0 0 0 0)'; 
-    stripText.style.display = 'block'; 
-    
     cardsContainer.style.display = 'none';
     cardsContainer.innerHTML = '';
     collectBtn.style.display = 'none';
@@ -183,8 +181,6 @@ function performRip(packIndex, price) {
     updateCoinDisplay();
 
     document.querySelector('.close-pack-btn').style.display = 'none';
-    document.getElementById('strip-text').style.display = 'none'; // СКРЫВАЕМ ТЕКСТ
-
     playSound('rip');
     const strip = document.getElementById('tear-strip');
     const pack = document.getElementById('animated-pack');
@@ -210,9 +206,8 @@ function revealCards(packIndex) {
         card.innerHTML = `<img src="/memes/${imgNum}.png">`; 
         
         if (i === 9) {
-            // РЕДКАЯ КАРТА
             card.classList.add('rare-card'); 
-            card.style.animationDelay = '3s'; // ЗАДЕРЖКА 3 СЕК
+            card.style.animationDelay = '3s';
             setTimeout(() => playSound('win'), 3000);
         } else {
             card.style.animationDelay = `${i * 0.1}s`;
@@ -222,7 +217,6 @@ function revealCards(packIndex) {
     playSound('coins'); 
     ownedPacks.push(packIndex);
     localStorage.setItem('ownedPacks', JSON.stringify(ownedPacks));
-    
     setTimeout(() => {
         document.getElementById('collect-btn').style.display = 'block';
     }, 3500);
@@ -284,13 +278,19 @@ function showScreen(name) {
     screens[name].classList.add('active');
     
     if (name !== 'shop') {
-        lastMainScreen = name; // Запоминаем где были
+        lastMainScreen = name;
     }
 
     if (name === 'login') {
         document.getElementById('top-bar').style.display = 'none';
     } else {
         updateCoinDisplay();
+    }
+    
+    // === ВОССТАНОВЛЕНИЕ ТАЙМЕРА ПРИ ВОЗВРАТЕ В ИГРУ ===
+    if (name === 'game' && currentTimerEnd > Date.now()) {
+        const remaining = (currentTimerEnd - Date.now()) / 1000;
+        animateTimer(remaining);
     }
 }
 
@@ -308,7 +308,6 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
-// === ЛОГИКА КНОПКИ "НАЗАД" В ЛОББИ ===
 function backFromLobby() {
     playSound('click');
     if (isGameStarted) {
@@ -356,14 +355,26 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-socket.on('timerStart', ({ duration }) => {
+// === НОВАЯ ФУНКЦИЯ АНИМАЦИИ ТАЙМЕРА ===
+function animateTimer(duration) {
     const bar = document.getElementById('timer-bar');
-    document.getElementById('timer-container').style.display = 'block';
+    const container = document.getElementById('timer-container');
+    container.style.display = 'block';
+    
+    // Мгновенный сброс для старта
     bar.style.transition = 'none';
     bar.style.width = '100%';
-    void bar.offsetWidth; 
+    void bar.offsetWidth; // Force reflow
+    
+    // Запуск анимации
     bar.style.transition = `width ${duration}s linear`;
     bar.style.width = '0%';
+}
+
+socket.on('timerStart', ({ duration }) => {
+    // Сохраняем время окончания локально
+    currentTimerEnd = Date.now() + (duration * 1000);
+    animateTimer(duration);
 });
 
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
