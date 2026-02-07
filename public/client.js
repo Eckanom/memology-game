@@ -60,6 +60,8 @@ function showPopup(text, onYes = null, showNo = false) {
 
 let playerCoins = parseInt(localStorage.getItem('memeCoins')) || 0;
 let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0]; 
+let lastMainScreen = 'login';
+let returnToOptions = false; 
 
 function updateCoinDisplay() {
     document.getElementById('coin-count').innerText = playerCoins;
@@ -74,21 +76,24 @@ function addCoins(amount) {
 }
 
 function openShop() {
+    const optionsModal = document.getElementById('settings-modal');
+    if (optionsModal.style.display === 'flex') {
+        returnToOptions = true;
+        closeSettings();
+    } else {
+        returnToOptions = false;
+    }
     playSound('click');
     showScreen('shop');
     renderShop();
-    closeSettings();
 }
 
 function backFromShop() {
     playSound('click');
-    if (currentRoomId && screens.game.classList.contains('active')) {
-        showScreen('game');
-    } else if (currentRoomId) {
-        showScreen('lobby');
-    } else {
-        showScreen('login');
-        document.getElementById('top-bar').style.display = 'none';
+    showScreen(lastMainScreen);
+    if (returnToOptions) {
+        openSettings();
+        returnToOptions = false;
     }
 }
 
@@ -128,7 +133,7 @@ function startPackOpening(packIndex, price) {
     const overlay = document.getElementById('pack-opening-overlay');
     const pack = document.getElementById('animated-pack');
     const strip = document.getElementById('tear-strip');
-    const stripText = document.getElementById('strip-text'); // ТЕКСТ ЗАГОЛОВКА
+    const stripText = document.getElementById('strip-text'); 
     const cardsContainer = document.getElementById('revealed-cards');
     const collectBtn = document.getElementById('collect-btn');
     const closeBtn = document.querySelector('.close-pack-btn');
@@ -137,8 +142,7 @@ function startPackOpening(packIndex, price) {
     pack.classList.remove('pack-slide-down');
     strip.style.display = 'flex';
     strip.style.clipPath = 'inset(0 0 0 0)'; 
-    
-    stripText.style.display = 'block'; // Показываем текст "Потяни..."
+    stripText.style.display = 'block'; 
     
     cardsContainer.style.display = 'none';
     cardsContainer.innerHTML = '';
@@ -179,7 +183,7 @@ function performRip(packIndex, price) {
     updateCoinDisplay();
 
     document.querySelector('.close-pack-btn').style.display = 'none';
-    document.getElementById('strip-text').style.display = 'none'; // СКРЫВАЕМ ТЕКСТ ПОСЛЕ РАЗРЫВА
+    document.getElementById('strip-text').style.display = 'none'; // СКРЫВАЕМ ТЕКСТ
 
     playSound('rip');
     const strip = document.getElementById('tear-strip');
@@ -199,17 +203,16 @@ function revealCards(packIndex) {
     container.style.display = 'grid';
     const startImg = packIndex * 10 + 1;
     
-    // Генерируем 10 карт (9 обычных + 1 редкая)
     for(let i=0; i<10; i++) {
         const imgNum = startImg + i;
         const card = document.createElement('div');
         card.className = 'revealed-card';
-        card.innerHTML = `<img src="/memes/${imgNum}.png">`; // Используем .png
+        card.innerHTML = `<img src="/memes/${imgNum}.png">`; 
         
         if (i === 9) {
-            // ПОСЛЕДНЯЯ КАРТА - РЕДКАЯ (ПОВЕРХ ЦЕНТРАЛЬНОЙ)
+            // РЕДКАЯ КАРТА
             card.classList.add('rare-card'); 
-            card.style.animationDelay = '3s'; // Задержка 3 секунды
+            card.style.animationDelay = '3s'; // ЗАДЕРЖКА 3 СЕК
             setTimeout(() => playSound('win'), 3000);
         } else {
             card.style.animationDelay = `${i * 0.1}s`;
@@ -220,7 +223,6 @@ function revealCards(packIndex) {
     ownedPacks.push(packIndex);
     localStorage.setItem('ownedPacks', JSON.stringify(ownedPacks));
     
-    // Кнопка появляется после того, как выпадет редкая карта
     setTimeout(() => {
         document.getElementById('collect-btn').style.display = 'block';
     }, 3500);
@@ -280,6 +282,11 @@ const screens = {
 function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
+    
+    if (name !== 'shop') {
+        lastMainScreen = name; // Запоминаем где были
+    }
+
     if (name === 'login') {
         document.getElementById('top-bar').style.display = 'none';
     } else {
@@ -301,6 +308,7 @@ function joinGame() {
     document.getElementById('room-display').innerText = roomId;
 }
 
+// === ЛОГИКА КНОПКИ "НАЗАД" В ЛОББИ ===
 function backFromLobby() {
     playSound('click');
     if (isGameStarted) {
@@ -318,7 +326,6 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
-    // Внимание: онлайн-счетчик удален из меню, здесь обновляем только в лобби (если он есть)
     const onlineCountLobby = document.getElementById('online-count');
     if(onlineCountLobby) onlineCountLobby.innerText = players.length;
 
@@ -349,17 +356,12 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-// === ИСПРАВЛЕННЫЙ ТАЙМЕР ===
 socket.on('timerStart', ({ duration }) => {
     const bar = document.getElementById('timer-bar');
     document.getElementById('timer-container').style.display = 'block';
-    
-    // Сброс анимации для перезапуска
     bar.style.transition = 'none';
     bar.style.width = '100%';
-    void bar.offsetWidth; // Триггер перерисовки
-    
-    // Запуск новой анимации на оставшееся время
+    void bar.offsetWidth; 
     bar.style.transition = `width ${duration}s linear`;
     bar.style.width = '0%';
 });
@@ -479,7 +481,7 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
 
 socket.on('gameOver', (sortedPlayers) => {
     showScreen('gameover');
-    isGameStarted = false; // ИГРА ЗАКОНЧЕНА
+    isGameStarted = false; 
     playSound('finish'); 
     const list = document.getElementById('podium-list');
     list.innerHTML = sortedPlayers.map((p, i) => {
