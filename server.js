@@ -15,7 +15,7 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === БАЗА ДАННЫХ ВОПРОСОВ ===
+// === БАЗА ДАННЫХ ВОПРОСОВ (500+ СЦЕНАРИЕВ) ===
 const SCENARIO_DECKS = {
     everyday: [
         "Твое лицо, когда открыл холодильник, а там пусто, хотя проверял 5 минут назад",
@@ -435,9 +435,9 @@ const SCENARIO_DECKS = {
     ]
 };
 
-// === 100 КАРТ ===
+// === 100 КАРТ .PNG ===
 const TOTAL_IMAGES = 100; 
-const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.jpg`);
+const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.png`);
 // === ТАЙМЕР ХОДА (30 СЕКУНД) ===
 const TURN_TIMER_SECONDS = 30;
 
@@ -564,7 +564,7 @@ io.on('connection', (socket) => {
             if (player) player.score += 1;
         });
 
-        finishRound(roomId, 'ДРУЖБА (НИЧЬЯ)', '/memes/1.jpg', true);
+        finishRound(roomId, 'ДРУЖБА (НИЧЬЯ)', '/memes/1.png', true); // .png
     });
 
     socket.on('chooseWinner', ({ roomId, winnerSocketId }) => {
