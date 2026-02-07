@@ -221,7 +221,7 @@ function revealCards(packIndex) {
         const imgNum = startImg + i;
         const card = document.createElement('div');
         card.className = 'revealed-card';
-        card.innerHTML = `<img src="/memes/${imgNum}.png">`; // ТУТ ИЗМЕНЕНИЕ
+        card.innerHTML = `<img src="/memes/${imgNum}.png">`;
         if(i===9) {
             card.style.animationDelay = '2s'; // Редкая карта
             setTimeout(() => playSound('win'), 2000);
@@ -322,7 +322,10 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
-    // ТУТ УБРАН ОНЛАЙН СЧЕТЧИК, ЧТОБЫ НЕ БЫЛО ОШИБКИ
+    // ОБНОВЛЕНИЕ СЧЕТЧИКА
+    const countEl = document.getElementById('online-count');
+    if (countEl) countEl.innerText = players.length;
+
     const list = document.getElementById('player-list');
     list.innerHTML = players.map(p => 
         `<div style="border-bottom:2px solid black; padding:5px; display:flex; align-items:center; justify-content:space-between;">
@@ -363,15 +366,23 @@ socket.on('timerStart', ({ duration }) => {
     bar.style.width = '0%';
 });
 
+// === ОБНОВЛЕННАЯ ЛОГИКА ОТОБРАЖЕНИЯ РОЛИ ===
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
     showScreen('game');
     playSound('card');
     myId = socket.id;
     isJudge = (myId === judgeId);
     document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
+    
+    // ТУТ ВНЕСЕНЫ ИЗМЕНЕНИЯ: ДОБАВЛЕН СЧЕТЧИК
+    const playerCount = hands.length;
     const badge = document.getElementById('role-badge');
-    badge.innerText = isJudge ? `ТЫ СУДЬЯ` : `ТЫ ИГРОК`;
+    badge.innerText = isJudge 
+        ? `ТЫ СУДЬЯ / ${playerCount}` 
+        : `ТЫ ИГРОК / ${playerCount}`;
+    
     badge.style.color = "black"; 
+
     document.getElementById('scenario-text').innerText = scenario;
     document.getElementById('submissions-container').innerHTML = '';
     document.getElementById('status-text').innerText = isJudge ? "ЖДЕМ КАРТЫ..." : "ВЫБЕРИ МЕМ!";
