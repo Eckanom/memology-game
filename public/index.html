@@ -34,22 +34,8 @@
                     <button class="retro-btn btn-shop" onclick="openShop()">МАГАЗИН</button>
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
-
-                <div id="menu-player-count" style="
-                    background: black;
-                    color: white;
-                    padding: 5px 10px;
-                    font-size: 1.3rem;
-                    border: 2px solid white;
-                    align-self: flex-start; /* Прижать влево */
-                    margin-top: -10px; /* Чуть подтянуть вверх к кнопкам */
-                    box-shadow: 2px 2px 0 0 rgba(0,0,0,0.5);
-                ">
-                    👥 <span id="online-count">0</span>
-                </div>
-
             </div>
-            <div class="version-tag">v2.3.2 UI Move</div>
+            <div class="version-tag">v2.5.0 PNG Update</div>
         </div>
 
         <div id="lobby-screen" class="screen">
@@ -149,7 +135,13 @@
 
         <div id="settings-modal" class="modal-overlay" style="display: none;">
             <div class="modal-card">
-                <h2>ОПЦИИ</h2> <button class="retro-btn btn-shop" onclick="openShop()" style="margin-bottom:15px;">МАГАЗИН КАРТ</button> <button class="retro-btn btn-blue" onclick="testSound()" style="margin-bottom:15px;">ПРОВЕРИТЬ ЗВУК</button> <div class="setting-item">
+                <h2>ОПЦИИ</h2>
+                
+                <button class="retro-btn btn-shop" onclick="openShop()" style="margin-bottom:15px;">МАГАЗИН КАРТ</button>
+
+                <button class="retro-btn btn-blue" onclick="testSound()" style="margin-bottom:15px;">ПРОВЕРИТЬ ЗВУК</button>
+
+                <div class="setting-item">
                     <label>ГРОМКОСТЬ: <span id="volume-value">5</span></label>
                     <input type="range" id="volume-slider" min="0" max="10" value="5" oninput="updateVolume(this.value)">
                 </div>
