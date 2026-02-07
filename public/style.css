@@ -1,10 +1,69 @@
-/* ... (Оставляем всё, что было выше, без изменений) ... */
-
-/* === КНОПКА МАГАЗИНА (ФИОЛЕТОВАЯ) === */
-.btn-shop { 
-    background: #9c27b0; /* Фиолетовый */
-    color: white;
+/* === ПОДКЛЮЧЕНИЕ ШРИФТА BADABOOM BB (Кириллица) === */
+@font-face {
+    font-family: 'BadaBoom BB';
+    src: url('https://db.onlinewebfonts.com/t/1f4728513903426767793d5f47f20235.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
 }
+
+:root {
+    --bg-green: #0d2b16;
+    --panel-yellow: #ffd700;
+    --btn-red: #ff4500;
+    --btn-green: #00c853;
+    --btn-blue: #2962ff;
+    --btn-purple: #9c27b0;
+    --card-white: #f0f0f0;
+    --border-black: #000000;
+}
+
+/* ПРИМЕНЯЕМ ШРИФТ КО ВСЕМУ */
+* {
+    font-family: 'BadaBoom BB', 'Impact', sans-serif !important;
+    letter-spacing: 1px;
+}
+
+body {
+    background-color: var(--bg-green);
+    background-image: radial-gradient(#ffffff 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-blend-mode: overlay;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* === ОГРАНИЧЕНИЕ ИГРОВОЙ ЗОНЫ (МОБИЛЬНЫЙ ВИД НА ПК) === */
+.app-container {
+    width: 100%;
+    max-width: 500px;
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border-left: 4px solid black;
+    border-right: 4px solid black;
+    box-shadow: 0 0 50px rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+    position: relative;
+}
+.screen.active { display: flex; }
 
 /* === ВЕРХНЯЯ ПАНЕЛЬ С МОНЕТАМИ === */
 .currency-display {
@@ -23,10 +82,113 @@
     box-shadow: 3px 3px 0 0 rgba(0,0,0,0.5);
 }
 
+/* === МЕНЮ === */
+.menu-panel {
+    background-color: var(--panel-yellow);
+    border: 4px solid var(--border-black);
+    box-shadow: 10px 10px 0px 0px black;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 360px;
+    transform: rotate(-2deg);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.version-tag {
+    position: absolute;
+    bottom: 10px;
+    right: 15px;
+    font-size: 1.5rem;
+    color: black;
+    pointer-events: none;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.5);
+}
+
+.logo-area h1 {
+    font-size: 4.5rem;
+    line-height: 0.9;
+    margin: 0;
+    text-transform: uppercase;
+    text-shadow: 3px 3px 0px white;
+    color: black;
+}
+.subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: black;}
+
+.input-retro {
+    width: 100%;
+    padding: 15px;
+    border: 3px solid black;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    border-radius: 0;
+    text-transform: uppercase;
+}
+
+.input-retro::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+    font-family: 'BadaBoom BB', sans-serif;
+    text-transform: uppercase;
+}
+
+.nsfw-toggle-menu { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.2rem; color: black; }
+.nsfw-toggle-menu input { width: 25px; height: 25px; accent-color: var(--btn-red); }
+
+.retro-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 1.8rem;
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px black;
+    cursor: pointer;
+    text-transform: uppercase;
+    color: white;
+    margin-bottom: 10px;
+}
+.retro-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px 0px black; }
+.btn-start { background: var(--btn-red); }
+.btn-options { background: var(--btn-blue); }
+.btn-green { background: var(--btn-green); }
+.btn-blue { background: var(--btn-blue); }
+.btn-shop { background: var(--btn-purple); }
+
+.lobby-card {
+    background: var(--card-white);
+    border: 4px solid black;
+    box-shadow: 8px 8px 0px 0px black;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+.lobby-card h2 { font-size: 3rem; margin: 0 0 10px 0; }
+
+.room-info {
+    background: var(--panel-yellow);
+    border: 2px solid black;
+    padding: 5px 15px;
+    font-size: 1.5rem;
+    margin: 10px 0;
+    display: inline-block;
+}
+.player-list-container { text-align: left; margin: 20px 0; font-size: 1.2rem; }
+
+.player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid black;
+    background: white;
+}
+
 /* === ЭКРАН МАГАЗИНА === */
 .shop-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
     width: 100%;
     max-height: 60vh;
@@ -36,7 +198,7 @@
 }
 
 .shop-pack {
-    background: linear-gradient(135deg, #c0c0c0, #e0e0e0, #a0a0a0); /* Эффект фольги */
+    background: linear-gradient(135deg, #c0c0c0, #e0e0e0, #a0a0a0);
     border: 3px solid black;
     border-radius: 5px;
     height: 180px;
@@ -64,9 +226,7 @@
 }
 
 .pack-title { font-size: 1.5rem; margin-bottom: 5px; color: black; text-align: center; line-height: 1; }
-.pack-price { 
-    background: black; color: #ffd700; padding: 2px 8px; font-size: 1rem; margin-top: 5px; 
-}
+.pack-price { background: black; color: #ffd700; padding: 2px 8px; font-size: 1rem; margin-top: 5px; }
 
 /* === АНИМАЦИЯ ОТКРЫТИЯ (OVERLAY) === */
 #pack-opening-overlay {
@@ -80,11 +240,10 @@
     justify-content: center;
 }
 
-/* Пакетик в центре */
 .opening-pack {
     width: 220px;
     height: 320px;
-    background: linear-gradient(135deg, #ffd700, #ffecb3, #ffca28); /* Золотая фольга */
+    background: linear-gradient(135deg, #ffd700, #ffecb3, #ffca28);
     border: 4px solid white;
     position: relative;
     display: flex;
@@ -94,20 +253,13 @@
     transition: transform 0.5s ease-in;
 }
 
-/* Хлястик для отрыва */
 .tear-strip {
     position: absolute;
     top: 0;
     left: -10px;
     width: calc(100% + 20px);
     height: 40px;
-    background: Repeating-linear-gradient(
-        45deg,
-        #ff0000,
-        #ff0000 10px,
-        #ffffff 10px,
-        #ffffff 20px
-    );
+    background: Repeating-linear-gradient(45deg, #ff0000, #ff0000 10px, #ffffff 10px, #ffffff 20px);
     border: 2px solid black;
     cursor: grab;
     z-index: 10;
@@ -121,7 +273,6 @@
 
 .tear-strip:active { cursor: grabbing; }
 
-/* Карты внутри (скрыты до разрыва) */
 .revealed-cards-container {
     display: none;
     flex-wrap: wrap;
@@ -148,7 +299,182 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Анимация улетания пакета */
 .pack-slide-down {
     transform: translateY(150vh) rotate(10deg);
 }
+
+/* === ИГРА === */
+.game-layout {
+    justify-content: space-between;
+    padding: 10px 5px;
+}
+
+.game-header {
+    background: var(--panel-yellow);
+    border: 3px solid black;
+    box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.5);
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: env(safe-area-inset-top);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-icon-btn {
+    background: white;
+    border: 3px solid black;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px 0px black;
+    transition: transform 0.1s;
+}
+.settings-icon-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 0 black; }
+.settings-icon-btn svg { fill: black; }
+
+.round-info-block {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge-black { 
+    background: black; 
+    color: white; 
+    padding: 3px 8px; 
+    font-size: 1.2rem; 
+}
+
+.role-badge { 
+    margin-left: 5px; 
+    color: black !important; 
+    font-size: 1.3rem; 
+}
+
+.badge-white { 
+    font-size: 1.3rem; 
+    margin-right: 5px;
+    color: black;
+}
+
+.scenario-card-modern {
+    background: var(--card-white);
+    border: 3px solid black;
+    box-shadow: 6px 6px 0px 0px rgba(0,0,0,0.5);
+    width: 100%;
+    transform: rotate(1deg);
+    margin: 10px 0;
+    flex-shrink: 0;
+}
+.card-header-blue { 
+    background: var(--btn-blue); 
+    color: white; 
+    padding: 8px; 
+    font-size: 1.2rem; 
+    border-bottom: 3px solid black; 
+}
+
+.card-body-white { 
+    padding: 15px; 
+    font-size: 1.5rem;
+    text-align: center; 
+    text-transform: uppercase; 
+    min-height: 60px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    line-height: 1.1; 
+}
+
+.table-area {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.status-badge { 
+    background: black; 
+    color: var(--panel-yellow); 
+    padding: 5px 15px; 
+    margin-bottom: 10px; 
+    font-size: 1.2rem; 
+}
+.submissions-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; max-width: 600px; }
+
+.submission-card, .judging-card {
+    width: 70px; height: 100px; background: #111; color: white;
+    display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid white;
+}
+.judging-card { background: white; color: black; border: 2px solid black; }
+.judging-card img { width: 100%; height: 100%; object-fit: cover; }
+
+#hand-area { width: 100%; padding-bottom: env(safe-area-inset-bottom); text-align: center; margin-top: auto; }
+.hand-label { background: black; color: white; display: inline-block; padding: 3px 10px; font-size: 1rem; margin-bottom: 5px; }
+.hand-scroll { display: flex; flex-direction: row; justify-content: center; align-items: flex-end; width: 100%; overflow-x: auto; padding: 10px 0; }
+
+.card {
+    background: white; width: 90px; min-width: 90px; height: 130px;
+    padding: 5px 5px 20px 5px; box-sizing: border-box; border: 2px solid black;
+    box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.4); margin-right: -15px;
+    transition: transform 0.2s; cursor: pointer; position: relative;
+}
+.card:last-child { margin-right: 0; }
+.card:hover, .card:active { transform: translateY(-20px) !important; z-index: 100; border-color: var(--btn-blue); }
+.card img { width: 100%; height: 100%; object-fit: cover; border: 2px solid black; background: #ddd; pointer-events: none; }
+.card::after { content: 'MEME'; position: absolute; bottom: 3px; left: 5px; font-size: 0.8rem; opacity: 0.5; }
+
+.podium-place { padding: 10px; margin-bottom: 5px; border: 3px solid black; display: flex; justify-content: space-between; color: black; box-shadow: 4px 4px 0 0 black; background: white; font-size: 1.3rem; }
+.place-1 { background: #FFD700; }
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-card {
+    background: var(--panel-yellow);
+    border: 4px solid black;
+    box-shadow: 10px 10px 0 0 black;
+    padding: 30px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
+    transform: rotate(1deg);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-card h2 { margin-top: 0; font-size: 3.5rem; margin-bottom: 20px; line-height: 1; }
+.setting-item { margin-bottom: 20px; text-align: left; font-size: 1.2rem; }
+
+.deck-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 1rem;
+}
+.deck-grid label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.deck-grid input { width: 20px; height: 20px; accent-color: var(--btn-blue); margin: 0; }
+
+input[type=range] { -webkit-appearance: none; width: 100%; margin: 10px 0; background: transparent; }
+input[type=range]:focus { outline: none; }
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: white; border: 2px solid black; box-shadow: 2px 2px 0 0 black; }
+input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px solid black; background: var(--btn-blue); cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 2px 2px 0 0 black; }
