@@ -10,32 +10,48 @@ const audio = {
     draw: new Audio('/sounds/draw.mp3') 
 };
 
-// === МАССИВЫ СЛУЧАЙНЫХ ЗВУКОВ ===
+// === МАССИВЫ ЗВУКОВ (АВТО-ГЕНЕРАЦИЯ) ===
 
-// Звуки для победы в РАУНДЕ (win1.mp3, win2.mp3...)
-const winSounds = [
-    new Audio('/sounds/win1.mp3'),
-    new Audio('/sounds/win2.mp3'),
-    new Audio('/sounds/win3.mp3')
-];
+// 1. Загружаем 15 звуков победы (win1.mp3 ... win15.mp3)
+const winSounds = [];
+for (let i = 1; i <= 15; i++) {
+    winSounds.push(new Audio(`/sounds/win${i}.mp3`));
+}
 
-// Звуки для КОНЦА ИГРЫ (finish1.mp3, finish2.mp3...)
-const finishSounds = [
-    new Audio('/sounds/finish1.mp3'),
-    new Audio('/sounds/finish2.mp3')
-];
+// 2. Загружаем 5 звуков финала (finish1.mp3 ... finish5.mp3)
+const finishSounds = [];
+for (let i = 1; i <= 5; i++) {
+    finishSounds.push(new Audio(`/sounds/finish${i}.mp3`));
+}
+
+// === ЛОГИКА "БЕЗ ПОВТОРОВ" ===
+// Создаем список индексов от 0 до 14 [0, 1, 2, ..., 14]
+let availableWinIndices = Array.from({ length: 15 }, (_, i) => i);
 
 function playSound(name) {
     let soundToPlay;
 
     if (name === 'win') {
-        // Случайный звук для победы в раунде
-        soundToPlay = winSounds[Math.floor(Math.random() * winSounds.length)];
+        // Если вдруг звуки закончились (сыграли > 15 раундов), наполняем список заново
+        if (availableWinIndices.length === 0) {
+            availableWinIndices = Array.from({ length: 15 }, (_, i) => i);
+        }
+
+        // 1. Выбираем случайный номер ИЗ ОСТАВШИХСЯ
+        const randomIndex = Math.floor(Math.random() * availableWinIndices.length);
+        const soundIndex = availableWinIndices[randomIndex];
+
+        // 2. Берем этот звук
+        soundToPlay = winSounds[soundIndex];
+
+        // 3. УДАЛЯЕМ этот индекс из доступных, чтобы он не повторился
+        availableWinIndices.splice(randomIndex, 1);
+
     } else if (name === 'finish') {
-        // Случайный звук для финала игры (НОВОЕ)
+        // Для финала просто случайный из 5 (тут можно повторять, игра все равно кончилась)
         soundToPlay = finishSounds[Math.floor(Math.random() * finishSounds.length)];
     } else {
-        // Обычный звук по имени
+        // Обычные звуки
         soundToPlay = audio[name];
     }
 
@@ -65,8 +81,7 @@ function updateVolume(val) {
 }
 
 function testSound() {
-    // Проверяем звук финала для теста, так интереснее
-    playSound('finish'); 
+    playSound('win'); // Проверяем работу системы
 }
 
 function leaveGame() {
@@ -266,7 +281,6 @@ socket.on('gameState', (state) => {
 
 socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
     
-    // === ЛОГИКА ВЫБОРА ЗВУКА РАУНДА ===
     if (isDraw) {
         playSound('draw'); 
     } else {
