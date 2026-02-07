@@ -15,7 +15,7 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === БАЗА ДАННЫХ ВОПРОСОВ (500+ СЦЕНАРИЕВ) ===
+// === БАЗА ДАННЫХ ВОПРОСОВ ===
 const SCENARIO_DECKS = {
     everyday: [
         "Твое лицо, когда открыл холодильник, а там пусто, хотя проверял 5 минут назад",
@@ -517,7 +517,6 @@ io.on('connection', (socket) => {
     socket.on('updateSettings', ({ roomId, withBots, activeDecks }) => {
         const room = rooms[roomId];
         if (room) {
-            room.lastActive = Date.now();
             room.withBots = withBots;
             room.activeDecks = activeDecks && activeDecks.length > 0 ? activeDecks : ['everyday'];
             if (room.withBots && room.gameState === 'lobby') {
