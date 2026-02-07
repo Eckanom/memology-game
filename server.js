@@ -438,8 +438,8 @@ const SCENARIO_DECKS = {
 // === 100 КАРТ .PNG ===
 const TOTAL_IMAGES = 100; 
 const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.png`);
-// === ТАЙМЕР ХОДА (30 СЕКУНД) ===
-const TURN_TIMER_SECONDS = 30;
+// === ТАЙМЕР ХОДА (20 СЕКУНД) ===
+const TURN_TIMER_SECONDS = 20;
 
 const rooms = {};
 
@@ -464,7 +464,7 @@ io.on('connection', (socket) => {
                 createdAt: Date.now(),
                 lastActive: Date.now(),
                 timer: null,
-                timerStartTimestamp: 0 // ДЛЯ СИНХРОНИЗАЦИИ ТАЙМЕРА
+                timerStartTimestamp: 0 
             };
         }
 
@@ -474,7 +474,6 @@ io.on('connection', (socket) => {
         const existingPlayer = room.players.find(p => p.id === socket.id);
         
         if (!existingPlayer) {
-            // АВАТАРКА
             const avatarUrl = `https://api.dicebear.com/7.x/fun-emoji/svg?seed=${encodeURIComponent(username)}`;
             
             room.players.push({
@@ -513,7 +512,6 @@ io.on('connection', (socket) => {
                 });
             }
             
-            // === ИСПРАВЛЕНО: СИНХРОНИЗАЦИЯ ТАЙМЕРА ДЛЯ НОВОГО ИГРОКА ===
             if (room.timerStartTimestamp > 0) {
                 const elapsed = (Date.now() - room.timerStartTimestamp) / 1000;
                 const remaining = Math.max(0, TURN_TIMER_SECONDS - elapsed);
@@ -574,7 +572,7 @@ io.on('connection', (socket) => {
             if (player) player.score += 1;
         });
 
-        finishRound(roomId, 'ДРУЖБА (НИЧЬЯ)', '/memes/1.png', true); // .png
+        finishRound(roomId, 'ДРУЖБА (НИЧЬЯ)', '/memes/1.png', true); 
     });
 
     socket.on('chooseWinner', ({ roomId, winnerSocketId }) => {
@@ -812,14 +810,14 @@ function startRound(roomId) {
     }
 }
 
-// === ЛОГИКА ТАЙМЕРА (С ФИКСАЦИЕЙ ВРЕМЕНИ) ===
+// === ЛОГИКА ТАЙМЕРА ===
 function startRoundTimer(roomId, isJudgingPhase = false) {
     const room = rooms[roomId];
     if (!room) return;
 
     if (room.timer) clearTimeout(room.timer);
 
-    room.timerStartTimestamp = Date.now(); // Запоминаем время старта
+    room.timerStartTimestamp = Date.now(); 
     io.to(roomId).emit('timerStart', { duration: TURN_TIMER_SECONDS });
 
     room.timer = setTimeout(() => {
