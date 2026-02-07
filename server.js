@@ -437,7 +437,7 @@ const SCENARIO_DECKS = {
 
 // === 100 КАРТ ===
 const TOTAL_IMAGES = 100; 
-const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.jpg`);
+const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.png`);
 // === ТАЙМЕР ХОДА (30 СЕКУНД) ===
 const TURN_TIMER_SECONDS = 30;
 
@@ -860,3 +860,4 @@ function dealCards(room, count) {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
