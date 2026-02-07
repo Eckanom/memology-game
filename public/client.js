@@ -281,6 +281,7 @@ function updateGameSettings() {
 let myId = '';
 let currentRoomId = '';
 let isJudge = false;
+let isGameStarted = false; // ФЛАГ СОСТОЯНИЯ ИГРЫ
 
 const screens = {
     login: document.getElementById('login-screen'),
@@ -312,6 +313,18 @@ function joinGame() {
     socket.emit('joinRoom', { username, roomId });
     showScreen('lobby');
     document.getElementById('room-display').innerText = roomId;
+}
+
+// === НОВАЯ ФУНКЦИЯ: НАЗАД ИЗ ЛОББИ ===
+function backFromLobby() {
+    playSound('click');
+    if (isGameStarted) {
+        // Если игра уже идет - возвращаемся на стол
+        showScreen('game');
+    } else {
+        // Если еще не началась - выходим в меню (перезагрузка)
+        location.reload(); 
+    }
 }
 
 socket.on('syncSettings', (settings) => {
@@ -366,23 +379,20 @@ socket.on('timerStart', ({ duration }) => {
     bar.style.width = '0%';
 });
 
-// === ОБНОВЛЕННАЯ ЛОГИКА ОТОБРАЖЕНИЯ РОЛИ ===
 socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
+    isGameStarted = true; // ИГРА НАЧАЛАСЬ
     showScreen('game');
     playSound('card');
     myId = socket.id;
     isJudge = (myId === judgeId);
     document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
-    
-    // ТУТ ВНЕСЕНЫ ИЗМЕНЕНИЯ: ДОБАВЛЕН СЧЕТЧИК
-    const playerCount = hands.length;
     const badge = document.getElementById('role-badge');
-    badge.innerText = isJudge 
-        ? `ТЫ СУДЬЯ / ${playerCount}` 
-        : `ТЫ ИГРОК / ${playerCount}`;
+    
+    // ТУТ СЧЕТЧИК ИГРОКОВ ВНУТРИ СТАТУСА
+    const playerCount = hands.length;
+    badge.innerText = isJudge ? `ТЫ СУДЬЯ / ${playerCount}` : `ТЫ ИГРОК / ${playerCount}`;
     
     badge.style.color = "black"; 
-
     document.getElementById('scenario-text').innerText = scenario;
     document.getElementById('submissions-container').innerHTML = '';
     document.getElementById('status-text').innerText = isJudge ? "ЖДЕМ КАРТЫ..." : "ВЫБЕРИ МЕМ!";
@@ -487,6 +497,7 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
 
 socket.on('gameOver', (sortedPlayers) => {
     showScreen('gameover');
+    isGameStarted = false; // ИГРА ОКОНЧЕНА
     playSound('finish'); 
     const list = document.getElementById('podium-list');
     list.innerHTML = sortedPlayers.map((p, i) => {
