@@ -39,7 +39,7 @@
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
             </div>
-            <div class="version-tag">v2.2.0 UI Update</div>
+            <div class="version-tag">v2.3.0 Modal Update</div>
         </div>
 
         <div id="lobby-screen" class="screen">
@@ -71,7 +71,7 @@
             
             <div id="animated-pack" class="opening-pack">
                 <div id="tear-strip" class="tear-strip">
-                    <div class="strip-pattern">>>> ТЯНИ >>></div>
+                    <div style="pointer-events:none;">>>> ТЯНИ СЮДА >>></div>
                 </div>
                 <div style="text-align:center; font-size:2rem; font-weight:bold; margin-top: 40px;">MEME PACK</div>
             </div>
@@ -108,17 +108,7 @@
             <div class="table-area">
                 <div id="status-text" class="status-badge">ЖДЕМ ХОДА...</div>
                 
-                <button id="draw-btn" class="retro-btn" style="
-                    display:none; 
-                    background: #9c27b0; 
-                    color: white; 
-                    padding: 15px 30px; 
-                    width: auto; 
-                    font-size: 1.5rem; 
-                    border: 3px solid black;
-                    box-shadow: 4px 4px 0 0 black;
-                    margin-bottom: 20px;
-                ">🤝 НИЧЬЯ (ВСЕМ БАЛЛ)</button>
+                <button id="draw-btn" class="retro-btn" style="display:none; background: #9c27b0; color: white; padding: 15px 30px; width: auto; font-size: 1.5rem; border: 3px solid black; box-shadow: 4px 4px 0 0 black; margin-bottom: 20px;">🤝 НИЧЬЯ (ВСЕМ БАЛЛ)</button>
                 
                 <div id="submissions-container" class="submissions-grid"></div>
             </div>
@@ -174,7 +164,7 @@
 
         <div id="custom-modal" class="modal-overlay" style="display:none; z-index: 3000;">
             <div class="modal-card" style="background:white; border-color:black;">
-                <h2 id="modal-text" style="font-size:2rem; margin-bottom:20px; line-height:1.2;">ТЕКСТ СООБЩЕНИЯ</h2>
+                <h2 id="modal-text" style="font-size:1.8rem; margin-bottom:20px; line-height:1.2;">СООБЩЕНИЕ</h2>
                 <div style="display:flex; gap:10px; justify-content:center; width:100%;">
                     <button id="modal-yes" class="retro-btn btn-green" style="margin:0;">OK</button>
                     <button id="modal-no" class="retro-btn" style="background:red; margin:0; display:none;">ОТМЕНА</button>
