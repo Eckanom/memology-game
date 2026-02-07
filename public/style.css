@@ -33,13 +33,21 @@ body {
     -webkit-user-select: none;
 }
 
+/* === ИСПРАВЛЕНИЕ: ОГРАНИЧЕНИЕ ИГРОВОЙ ЗОНЫ === */
 .app-container {
     width: 100%;
+    max-width: 500px; /* Ограничиваем ширину (как на телефоне) */
     height: 100%;
+    margin: 0 auto; /* Центрируем блок по горизонтали */
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
+    border-left: 4px solid black; /* Границы слева и справа */
+    border-right: 4px solid black;
+    box-shadow: 0 0 50px rgba(0,0,0,0.7); /* Тень, чтобы выделить зону на фоне */
+    background: rgba(0, 0, 0, 0.1); /* Легкое затемнение фона внутри игры */
+    box-sizing: border-box;
 }
 
 .screen {
