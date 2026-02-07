@@ -13,6 +13,7 @@
     --btn-green: #00c853;
     --btn-blue: #2962ff;
     --btn-purple: #9c27b0;
+    --btn-orange: #ff9100; /* Оранжевый цвет */
     --card-white: #f0f0f0;
     --border-black: #000000;
 }
@@ -63,7 +64,7 @@ body {
 }
 .screen.active { display: flex; }
 
-/* === ВЕРХНЯЯ ПАНЕЛЬ (ТОЛЬКО МОНЕТЫ) === */
+/* === ВЕРХНЯЯ ПАНЕЛЬ (МОНЕТЫ) === */
 #top-bar {
     position: absolute;
     top: 10px;
@@ -88,7 +89,7 @@ body {
     pointer-events: auto;
 }
 
-/* === ВЕРСИЯ ИГРЫ (БЕЛАЯ, МЕЛКАЯ) === */
+/* === ВЕРСИЯ ИГРЫ === */
 .version-tag {
     position: absolute;
     bottom: 10px;
@@ -163,6 +164,7 @@ body {
 .btn-green { background: var(--btn-green); }
 .btn-blue { background: var(--btn-blue); }
 .btn-shop { background: var(--btn-purple); }
+.btn-orange { background: var(--btn-orange); } /* Оранжевая кнопка */
 
 .lobby-card {
     background: var(--card-white);
