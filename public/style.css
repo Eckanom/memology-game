@@ -63,14 +63,14 @@ body {
 }
 .screen.active { display: flex; }
 
-/* === ВЕРХНЯЯ ПАНЕЛЬ (МОНЕТЫ И ИГРОКИ) === */
+/* === ВЕРХНЯЯ ПАНЕЛЬ (ТОЛЬКО МОНЕТЫ) === */
 #top-bar {
     position: absolute;
     top: 10px;
     left: 10px;
     right: 10px;
     display: flex;
-    justify-content: space-between; /* Разносим влево и вправо */
+    justify-content: flex-end; /* Монеты справа */
     z-index: 200;
     pointer-events: none;
 }
@@ -88,7 +88,7 @@ body {
     pointer-events: auto;
 }
 
-/* === ВЕРСИЯ ИГРЫ (ОБНОВЛЕНО: БЕЛАЯ, МЕЛКАЯ) === */
+/* === ВЕРСИЯ ИГРЫ (БЕЛАЯ, МЕЛКАЯ) === */
 .version-tag {
     position: absolute;
     bottom: 10px;
