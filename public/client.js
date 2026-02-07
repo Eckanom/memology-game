@@ -40,25 +40,26 @@ function playSound(name) {
     }
 }
 
-// === СИСТЕМА КАСТОМНЫХ ПОПАПОВ (ВМЕСТО ALERT/CONFIRM) ===
+// === НОВАЯ ФУНКЦИЯ ДЛЯ ВНУТРИИГРОВЫХ УВЕДОМЛЕНИЙ ===
 function showPopup(text, onYes = null, showNo = false) {
     const modal = document.getElementById('custom-modal');
     const textEl = document.getElementById('modal-text');
     const btnYes = document.getElementById('modal-yes');
     const btnNo = document.getElementById('modal-no');
 
+    // Подготовка текста и кнопок
     textEl.innerText = text;
     modal.style.display = 'flex';
     playSound('click');
 
-    // Кнопка "ОК" / "ДА"
+    // Кнопка OK / ДА
     btnYes.onclick = () => {
         playSound('click');
         modal.style.display = 'none';
         if (onYes) onYes();
     };
 
-    // Кнопка "ОТМЕНА" (если нужна)
+    // Кнопка ОТМЕНА (если нужна)
     if (showNo) {
         btnNo.style.display = 'block';
         btnNo.onclick = () => {
@@ -76,7 +77,7 @@ let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0];
 
 function updateCoinDisplay() {
     document.getElementById('coin-count').innerText = playerCoins;
-    document.getElementById('top-bar').style.display = 'flex'; // Показываем панель
+    document.getElementById('top-bar').style.display = 'flex'; 
 }
 
 function addCoins(amount) {
@@ -101,7 +102,7 @@ function backFromShop() {
         showScreen('lobby');
     } else {
         showScreen('login');
-        document.getElementById('top-bar').style.display = 'none'; // Скрываем на логине
+        document.getElementById('top-bar').style.display = 'none';
     }
 }
 
@@ -134,7 +135,7 @@ function buyPack(packIndex, price) {
     }
 }
 
-// --- АНИМАЦИЯ ОТКРЫТИЯ (СВАЙП ВПРАВО) ---
+// --- АНИМАЦИЯ ОТКРЫТИЯ (СОКРАЩЕНИЕ ЛЕНТЫ) ---
 let isDragging = false;
 let startX = 0;
 
@@ -149,7 +150,10 @@ function startPackOpening(packIndex, price) {
     overlay.style.display = 'flex';
     pack.classList.remove('pack-slide-down');
     strip.style.display = 'flex';
-    strip.style.transform = 'translateX(0)';
+    
+    // Сброс обрезки (видно всю ленту)
+    strip.style.clipPath = 'inset(0 0 0 0)'; 
+    
     cardsContainer.style.display = 'none';
     cardsContainer.innerHTML = '';
     collectBtn.style.display = 'none';
@@ -158,26 +162,29 @@ function startPackOpening(packIndex, price) {
     strip.onmousedown = strip.ontouchstart = (e) => {
         isDragging = true;
         startX = e.pageX || e.touches[0].pageX;
-        strip.style.transition = 'none';
     };
 
     document.onmouseup = document.ontouchend = () => {
         if (!isDragging) return;
         isDragging = false;
-        strip.style.transition = 'transform 0.3s ease-out';
-        strip.style.transform = 'translateX(0)'; // Возврат если не дотянул
+        // Если отпустил, но не дорвал - возвращаем ленту
+        strip.style.transition = 'clip-path 0.3s ease-out';
+        strip.style.clipPath = 'inset(0 0 0 0)';
     };
 
     document.onmousemove = document.ontouchmove = (e) => {
         if (!isDragging) return;
         const x = e.pageX || e.touches[0].pageX;
-        const diff = x - startX;
+        const diff = x - startX; // На сколько сдвинули вправо
 
         if (diff > 0) { 
-             strip.style.transform = `translateX(${diff}px)`; // Двигаем ленту
+             // Вычисляем процент обрезки (ширина ленты ~220px)
+             const percent = Math.min(100, (diff / 200) * 100);
+             strip.style.transition = 'none'; // Убираем анимацию для мгновенной реакции
+             strip.style.clipPath = `inset(0 0 0 ${percent}%)`; // Обрезаем слева
         }
 
-        if (diff > 150) { 
+        if (diff > 200) { // Если оторвали полностью
             isDragging = false;
             document.onmouseup = null;
             document.onmousemove = null;
@@ -236,6 +243,8 @@ function closePackOpening() {
     renderShop();
 }
 
+// === СТАНДАРТНЫЕ ФУНКЦИИ ===
+
 function openSettings() {
     document.getElementById('settings-modal').style.display = 'flex';
     playSound('click');
@@ -256,7 +265,6 @@ function testSound() {
 }
 
 function leaveGame() {
-    // Заменили confirm на кастомный
     showPopup("ТОЧНО ВЫЙТИ?", () => {
         location.reload();
     }, true);
@@ -314,7 +322,7 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
-    // ОБНОВЛЕНИЕ СЧЕТЧИКА ИГРОКОВ В ВЕРХНЕЙ ПАНЕЛИ
+    // ОБНОВЛЕНИЕ СЧЕТЧИКА
     document.getElementById('online-count').innerText = players.length;
 
     const list = document.getElementById('player-list');
@@ -419,7 +427,7 @@ socket.on('gameState', (state) => {
             drawBtn.onclick = () => { 
                 showPopup("ОБЪЯВИТЬ НИЧЬЮ?", () => {
                     socket.emit('declareDraw', { roomId: currentRoomId });
-                }, true);
+                }, true); 
             };
         }
         state.submissions.forEach(sub => {
@@ -452,7 +460,6 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
     if (myPlayer && myPlayer.username === winnerName) {
         const reward = Math.floor(Math.random() * (30 - 10 + 1)) + 10;
         addCoins(reward);
-        // Заменили alert на поп-ап
         showPopup(`ТЫ ВЫИГРАЛ!\n+${reward} МОНЕТ 🪙`);
     }
 
