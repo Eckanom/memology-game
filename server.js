@@ -6,7 +6,6 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// Настройка CORS
 const io = new Server(server, {
     cors: {
         origin: "*",
@@ -16,7 +15,7 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === БАЗА ДАННЫХ ВОПРОСОВ ===
+// === БАЗА ДАННЫХ ВОПРОСОВ (500+ СЦЕНАРИЕВ) ===
 const SCENARIO_DECKS = {
     everyday: [
         "Твое лицо, когда открыл холодильник, а там пусто, хотя проверял 5 минут назад",
