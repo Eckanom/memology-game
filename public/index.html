@@ -4,67 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Memeology</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
-
     <div class="app-container">
-        
         <div id="round-notification" style="display:none;"></div>
-        
         <div id="top-bar" style="display:none; justify-content: flex-end;">
-            <div class="currency-display">
-                <span id="coin-count">0</span> 🪙
-            </div>
+            <div class="currency-display"><span id="coin-count">0</span> 🪙</div>
         </div>
-
+        
         <div id="login-screen" class="screen active">
             <div class="menu-panel">
                 <div class="logo-area">
-                    <img src="logo_v2.png" alt="MEMEOLOGY" class="game-logo">
+                    <img src="logo.png" alt="MEMEOLOGY" class="game-logo">
                     <span class="subtitle">ULTIMATE EDITION</span>
                 </div>
-
                 <div id="login-form">
                     <input type="text" id="username" class="input-retro" placeholder="ТВОЙ НИКНЕЙМ" maxlength="12">
                     <input type="text" id="room" class="input-retro" placeholder="НОМЕР КОМНАТЫ" maxlength="5">
-                    
                     <button class="retro-btn btn-start" onclick="joinGame()">ВОЙТИ В ИГРУ</button>
-                    <button class="retro-btn btn-shop" onclick="openShop()">МАГАЗИН</button>
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
             </div>
-            <div class="version-tag">v3.3.0 Logo Fix</div>
+            <div class="version-tag">v4.7.0 Compact</div>
         </div>
 
         <div id="lobby-screen" class="screen">
             <div class="lobby-card">
                 <h2>ЛОББИ</h2>
-                <div class="room-info">
-                    КОМНАТА: <span id="room-display">...</span>
-                </div>
-                
-                <div id="menu-player-count" style="
-                    background: black;
-                    color: white;
-                    padding: 5px 10px;
-                    font-size: 1.3rem;
-                    border: 2px solid white;
-                    display: inline-block;
-                    margin-bottom: 15px;
-                ">
-                    👥 <span id="online-count">0</span>
-                </div>
-
+                <div class="room-info">КОМНАТА: <span id="room-display">...</span></div>
+                <div id="menu-player-count" style="background: black; color: white; padding: 5px 10px; font-size: 1.3rem; border: 2px solid white; display: inline-block; margin-bottom: 15px;">👥 <span id="online-count">0</span></div>
                 <div id="player-list" class="player-list-container"></div>
-
-                <p id="lobby-status-text">ЖДЕМ ИГРОКОВ (3-6)...</p>
-                <button id="start-btn" class="retro-btn btn-green" onclick="startGame()" style="display:none;">НАЧАТЬ ИГРУ</button>
-                <button class="retro-btn btn-options" onclick="openSettings()" style="margin-top:10px; padding:10px;">⚙ НАСТРОЙКИ</button>
-                <button class="retro-btn btn-orange" onclick="backFromLobby()">НАЗАД</button>
+                <p id="lobby-status-text">ЖМИ ГОТОВ!</p>
+                <button id="ready-btn" class="retro-btn btn-green" onclick="toggleReady()">Я ГОТОВ</button>
+                <button class="retro-btn btn-options" onclick="openSettings()">⚙ ОПЦИИ</button>
+                <button class="retro-btn btn-orange" onclick="backFromLobby()">ВЫХОД</button>
             </div>
         </div>
 
@@ -78,96 +58,46 @@
 
         <div id="pack-opening-overlay">
             <button class="close-pack-btn" onclick="closePackOpening()">X</button>
-            
-            <div id="animated-pack" class="opening-pack">
-                <div id="tear-strip" class="tear-strip">
-                    <div style="pointer-events:none;">>>> ТЯНИ СЮДА >>></div>
+            <div class="pack-container" id="booster-pack">
+                <div class="cards-wrapper" id="pack-cards-wrapper"></div>
+                <div class="pack-top"><span>ЖМИ!</span></div>
+                <div class="pack-body">
+                    <div class="pack-art">ПАК<br>МЕМОВ</div>
+                    <div style="font-size: 1rem; margin-top:10px;">ULTIMATE EDITION</div>
                 </div>
-                <div style="text-align:center; font-size:2rem; font-weight:bold; margin-top: 40px;">MEME PACK</div>
             </div>
-
-            <div id="revealed-cards" class="revealed-cards-container"></div>
-            <button id="collect-btn" class="retro-btn btn-green" style="display:none; margin-top:20px; width:200px;" onclick="closePackOpening()">ЗАБРАТЬ</button>
+            <button id="collect-btn" class="retro-btn btn-green" style="display:none; position: absolute; bottom: 10%; width:200px; z-index: 100;" onclick="closePackOpening()">ЗАБРАТЬ</button>
         </div>
 
         <div id="game-screen" class="screen game-layout">
             <div class="game-header">
                 <div class="header-left">
-                    <button class="settings-icon-btn" onclick="openSettings()">
-                        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
-                    </button>
-                    <div class="round-info-block">
-                        <span id="role-badge" class="role-badge">...</span>
-                    </div>
+                    <button class="settings-icon-btn" onclick="openSettings()"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></button>
+                    <div class="round-info-block"><span id="role-badge" class="role-badge">...</span></div>
                 </div>
             </div>
-
-            <div id="timer-container" style="width:100%; height:10px; background:white; border:2px solid black; margin-top:5px; display:none;">
-                <div id="timer-bar" style="height:100%; width:100%; background:var(--btn-red); transition: width linear;"></div>
-            </div>
-
-            <div class="scenario-card-modern">
-                <div id="scenario-header" class="card-header-blue">СИТУАЦИЯ</div>
-                <div class="card-body-white">
-                    <p id="scenario-text">...</p>
-                </div>
-            </div>
-
+            <div id="timer-container" style="width:100%; height:10px; background:white; border:2px solid black; margin-top:5px; display:none;"><div id="timer-bar" style="height:100%; width:100%; background:var(--btn-red); transition: width linear;"></div></div>
+            <div class="scenario-card-modern"><div id="scenario-header" class="card-header-blue">СИТУАЦИЯ</div><div class="card-body-white"><p id="scenario-text">...</p></div></div>
             <div class="table-area">
                 <div id="status-text" class="status-badge">ЖДЕМ ХОДА...</div>
-                
-                <button id="draw-btn" class="retro-btn" style="
-                    display:none; 
-                    background: #9c27b0; 
-                    color: white; 
-                    padding: 15px 30px; 
-                    width: auto; 
-                    font-size: 1.5rem; 
-                    border: 3px solid black;
-                    box-shadow: 4px 4px 0 0 black;
-                    margin-bottom: 20px;
-                ">🤝 НИЧЬЯ (ВСЕМ БАЛЛ)</button>
-                
+                <button id="draw-btn" class="retro-btn" style="display:none; background: #9c27b0; color: white; padding: 15px 30px; width: auto; font-size: 1.5rem; border: 3px solid black; box-shadow: 4px 4px 0 0 black; margin-bottom: 20px;">🤝 НИЧЬЯ (ВСЕМ БАЛЛ)</button>
                 <div id="submissions-container" class="submissions-grid"></div>
             </div>
-
             <div id="modifiers-bar" class="modifiers-bar" style="display:none;">
-                <button id="btn-veto" class="modifier-btn" onclick="useVeto()">
-                    🚫 ВЕТТО
-                </button>
-                <button id="btn-input" class="modifier-btn" style="background: var(--panel-yellow);" onclick="openCustomAnswerInput()">
-                    ✍️ СВОЙ ОТВЕТ
-                </button>
-                <button id="btn-second-chance" class="modifier-btn" onclick="useSecondChance()">
-                    🔄 РЕРОЛЛ
-                </button>
+                <button id="btn-veto" class="modifier-btn" onclick="useVeto()">🚫 ВЕТТО</button>
+                <button id="btn-input" class="modifier-btn" style="background: var(--panel-yellow);" onclick="openCustomAnswerInput()">✍️ СВОЙ ОТВЕТ</button>
+                <button id="btn-second-chance" class="modifier-btn" onclick="useSecondChance()">🔄 РЕРОЛЛ</button>
             </div>
-
-            <div id="hand-area">
-                <div class="hand-label">ТВОИ КАРТЫ</div>
-                <div id="my-hand" class="hand-scroll"></div>
-            </div>
-
-            <button id="chat-fab" class="chat-fab" onclick="toggleChat()">
-                💬
-                <div id="chat-badge" class="chat-badge" style="display:none;"></div>
-            </button>
+            <div id="hand-area"><div class="hand-label">ТВОИ КАРТЫ</div><div id="my-hand" class="hand-scroll"></div></div>
+            <button id="chat-fab" class="chat-fab" onclick="toggleChat()">💬<div id="chat-badge" class="chat-badge" style="display:none;"></div></button>
         </div>
 
         <div id="chat-overlay" class="chat-overlay" style="display: none;">
             <div class="chat-window">
-                <div class="chat-header">
-                    <span>ЧАТ</span>
-                    <button onclick="toggleChat()" style="background:var(--btn-red); color:white; border:2px solid black; padding: 0 10px;">X</button>
-                </div>
+                <div class="chat-header"><span>ЧАТ</span><button onclick="toggleChat()" style="background:var(--btn-red); color:white; border:2px solid black; padding: 0 10px;">X</button></div>
                 <div id="chat-messages" class="chat-messages"></div>
-                
                 <div id="quick-replies" class="quick-replies-container"></div>
-
-                <div class="chat-input-area">
-                    <input type="text" id="chat-input" placeholder="..." maxlength="50">
-                    <button onclick="sendChatMessage()">➤</button>
-                </div>
+                <div class="chat-input-area"><input type="text" id="chat-input" placeholder="..." maxlength="50"><button onclick="sendChatMessage()">➤</button></div>
             </div>
         </div>
 
@@ -175,30 +105,18 @@
             <div class="lobby-card" style="background:#ffd700;">
                 <h1 style="font-size:3rem; margin:0;">ФИНАЛ</h1>
                 <div id="podium-list" style="margin:20px 0;"></div>
-                <button class="retro-btn btn-start" onclick="location.reload()">В МЕНЮ</button>
+                <button class="retro-btn btn-green" onclick="requestRematch()">СЫГРАТЬ ЕЩЁ</button>
+                <button class="retro-btn btn-orange" onclick="location.reload()" style="margin-top:10px;">В МЕНЮ</button>
             </div>
         </div>
 
         <div id="settings-modal" class="modal-overlay" style="display: none;">
             <div class="modal-card">
                 <h2>ОПЦИИ</h2>
-                
                 <button class="retro-btn btn-shop" onclick="openShop()" style="margin-bottom:15px;">МАГАЗИН КАРТ</button>
-
                 <button class="retro-btn btn-blue" onclick="testSound()" style="margin-bottom:15px;">ПРОВЕРИТЬ ЗВУК</button>
-
-                <div class="setting-item">
-                    <label>ГРОМКОСТЬ: <span id="volume-value">5</span></label>
-                    <input type="range" id="volume-slider" min="0" max="10" value="5" oninput="updateVolume(this.value)">
-                </div>
-
-                <div class="setting-item" style="border-top:2px solid black; padding-top:10px;">
-                    <div class="nsfw-toggle-menu" style="justify-content:space-between;">
-                        <label for="bot-check-modal">ИГРАТЬ С БОТАМИ</label>
-                        <input type="checkbox" id="bot-check-modal" onchange="updateGameSettings()">
-                    </div>
-                </div>
-
+                <div class="setting-item"><label>ГРОМКОСТЬ: <span id="volume-value">5</span></label><input type="range" id="volume-slider" min="0" max="10" value="5" oninput="updateVolume(this.value)"></div>
+                <div class="setting-item" style="border-top:2px solid black; padding-top:10px;"><div class="nsfw-toggle-menu" style="justify-content:space-between;"><label for="bot-check-modal">ИГРАТЬ С БОТАМИ</label><input type="checkbox" id="bot-check-modal" onchange="updateGameSettings()"></div></div>
                 <div class="setting-item" style="text-align:left;">
                     <label style="display:block; margin-bottom:5px;">КОЛОДЫ ВОПРОСОВ:</label>
                     <div class="deck-grid">
@@ -212,7 +130,6 @@
                         <label style="color:red; font-weight:bold;"><input type="checkbox" class="deck-check" value="nsfw" onchange="updateGameSettings()"> NSFW 18+</label>
                     </div>
                 </div>
-
                 <button class="retro-btn btn-start" onclick="closeSettings()">ЗАКРЫТЬ</button>
                 <button class="retro-btn" style="background:black; color:white; margin-top:10px;" onclick="leaveGame()">ВЫЙТИ В МЕНЮ</button>
             </div>
@@ -221,10 +138,7 @@
         <div id="custom-modal" class="modal-overlay" style="display:none; z-index: 3000;">
             <div class="modal-card" style="background:white; border-color:black;">
                 <h2 id="modal-text" style="font-size:1.8rem; margin-bottom:20px; line-height:1.2;">СООБЩЕНИЕ</h2>
-                <div style="display:flex; gap:10px; justify-content:center; width:100%;">
-                    <button id="modal-yes" class="retro-btn btn-green" style="margin:0;">OK</button>
-                    <button id="modal-no" class="retro-btn" style="background:red; margin:0; display:none;">ОТМЕНА</button>
-                </div>
+                <div style="display:flex; gap:10px; justify-content:center; width:100%;"><button id="modal-yes" class="retro-btn btn-green" style="margin:0;">OK</button><button id="modal-no" class="retro-btn" style="background:red; margin:0; display:none;">ОТМЕНА</button></div>
             </div>
         </div>
 
@@ -232,15 +146,10 @@
             <div class="modal-card" style="background:var(--card-white);">
                 <h2>ТВОЙ ОТВЕТ</h2>
                 <textarea id="custom-answer-text" class="input-retro" style="height:100px; text-align:left; font-size:1.2rem;" placeholder="Шути смешно..."></textarea>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="retro-btn btn-green" onclick="submitCustomAnswer()">ОТПРАВИТЬ</button>
-                    <button class="retro-btn btn-red" style="background:red;" onclick="closeCustomAnswerInput()">ОТМЕНА</button>
-                </div>
+                <div style="display:flex; gap:10px; margin-top:10px;"><button class="retro-btn btn-green" onclick="submitCustomAnswer()">ОТПРАВИТЬ</button><button class="retro-btn btn-red" style="background:red;" onclick="closeCustomAnswerInput()">ОТМЕНА</button></div>
             </div>
         </div>
-
     </div>
-
     <script src="client.js"></script>
 </body>
 </html>
