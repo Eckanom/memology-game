@@ -39,7 +39,6 @@ body {
     display: flex; justify-content: center; align-items: center; position: relative;
     border-left: 4px solid black; border-right: 4px solid black;
     box-shadow: 0 0 50px rgba(0,0,0,0.7); background: rgba(0, 0, 0, 0.1); box-sizing: border-box;
-    /* [FIX] */
     height: 100dvh;
 }
 
@@ -51,19 +50,27 @@ body {
 
 .version-tag { position: absolute; bottom: 10px; right: 15px; font-size: 0.8rem; color: white; opacity: 0.8; pointer-events: none; text-shadow: 1px 1px 0 black; }
 
-.menu-panel { background-color: var(--panel-yellow); border: 4px solid var(--border-black); box-shadow: 10px 10px 0px 0px black; padding: 40px 30px; width: 100%; max-width: 360px; transform: rotate(-2deg); text-align: center; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; }
+.menu-panel { background-color: var(--panel-yellow); border: 4px solid var(--border-black); box-shadow: 10px 10px 0px 0px black; padding: 30px 20px; width: 100%; max-width: 360px; transform: rotate(-2deg); text-align: center; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
 
-/* [NEW] Стиль для картинки логотипа */
-.game-logo {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 0 auto 10px auto;
-    /* Тень, имитирующая стиль текста, если логотип с прозрачным фоном */
-    filter: drop-shadow(3px 3px 0 white); 
+/* [FIX] ЛОГОТИП КАРТИНКОЙ */
+.logo-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
 }
 
-.subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: black;}
+.game-logo {
+    max-width: 90%;      /* Не шире контейнера */
+    max-height: 180px;   /* Ограничиваем высоту, иначе на мобилке не влезут кнопки */
+    width: auto;         /* Ширина подстроится под высоту */
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(4px 4px 0 white); /* Тень для стиля */
+}
+
+.subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: black; margin-top: 5px;}
 
 .input-retro { width: 100%; padding: 15px; border: 3px solid black; font-size: 1.5rem; margin-bottom: 10px; box-sizing: border-box; text-align: center; border-radius: 0; text-transform: uppercase; }
 .input-retro::placeholder { color: rgba(0, 0, 0, 0.5); font-family: 'BadaBoom BB', sans-serif; text-transform: uppercase; }
@@ -229,7 +236,6 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
     background: #eee;
 }
 
-/* [NEW] СТИЛИ ДЛЯ БЫСТРЫХ ОТВЕТОВ */
 .quick-replies-container {
     display: flex;
     gap: 10px;
