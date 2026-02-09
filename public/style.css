@@ -140,12 +140,10 @@ input[type=range]:focus { outline: none; }
 input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 12px; cursor: pointer; background: white; border: 2px solid black; box-shadow: 2px 2px 0 0 black; }
 input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px solid black; background: var(--btn-blue); cursor: pointer; -webkit-appearance: none; margin-top: -8px; box-shadow: 2px 2px 0 0 black; }
 
-/* === [NEW] СТИЛИ ЧАТА, МОДИФИКАТОРОВ И ТЕКСТА === */
-
-/* Чат FAB */
+/* === СТИЛИ ЧАТА === */
 .chat-fab {
     position: absolute;
-    bottom: 20px; /* Снизу справа */
+    bottom: 20px;
     right: 10px;
     width: 50px;
     height: 50px;
@@ -156,7 +154,7 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
     box-shadow: 3px 3px 0 0 black;
     z-index: 150;
     cursor: pointer;
-    display: none; /* Покажем через JS в игре */
+    display: none;
     align-items: center;
     justify-content: center;
 }
@@ -173,7 +171,6 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
     border-radius: 50%;
 }
 
-/* Окно чата (Шторка) */
 .chat-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -181,7 +178,7 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
     z-index: 2500;
     display: flex;
     justify-content: center;
-    align-items: flex-end; /* Выезжает снизу */
+    align-items: flex-end;
 }
 
 .chat-window {
@@ -253,7 +250,7 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
     cursor: pointer;
 }
 
-/* Панель модификаторов */
+/* === СТИЛИ МОДИФИКАТОРОВ === */
 .modifiers-bar {
     display: flex;
     justify-content: center;
@@ -280,24 +277,32 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
 .modifier-btn:active { transform: translate(1px, 1px); box-shadow: 0 0 0 0 black; }
 .modifier-btn:disabled { opacity: 0.5; filter: grayscale(1); pointer-events: none; border-style: dashed; }
 
-/* === [NEW] ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ О РАУНДЕ === */
+/* === [FIX] ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ О РАУНДЕ (ИСПРАВЛЕНО) === */
 #round-notification {
-    position: fixed;
+    position: absolute; /* ВАЖНО: привязано к контейнеру игры */
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8);
+    
+    background: rgba(0,0,0,0.9);
     color: #ffd700;
-    padding: 20px 40px;
+    
+    width: 90%; /* Ширина 90% от игрового стола, не экрана */
+    max-width: 400px;
+    padding: 15px;
+    box-sizing: border-box;
+    
     border: 4px solid white;
-    font-size: 3rem;
+    font-size: 2.5rem; /* Чуть меньше для смартфонов */
+    text-align: center;
+    
     z-index: 5000;
     pointer-events: none;
-    text-shadow: 2px 2px 0 black;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
-    animation: popIn 0.3s ease-out;
-    text-align: center;
-    width: 80%;
+    
+    text-shadow: 3px 3px 0 black;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes popIn {
