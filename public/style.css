@@ -115,6 +115,7 @@ body {
 .submission-card, .judging-card { width: 70px; height: 100px; background: #111; color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid white; }
 .judging-card { background: white; color: black; border: 2px solid black; overflow: hidden; }
 .judging-card img { width: 100%; height: 100%; object-fit: cover; }
+/* Стиль для текстовых ответов в игре */
 .judging-card .text-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.8rem; padding: 2px; box-sizing: border-box; background: #fffde7; word-break: break-word; line-height: 1.1; }
 
 #hand-area { width: 100%; padding-bottom: env(safe-area-inset-bottom); text-align: center; margin-top: auto; }
@@ -278,3 +279,28 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
 }
 .modifier-btn:active { transform: translate(1px, 1px); box-shadow: 0 0 0 0 black; }
 .modifier-btn:disabled { opacity: 0.5; filter: grayscale(1); pointer-events: none; border-style: dashed; }
+
+/* === [NEW] ВСПЛЫВАЮЩЕЕ УВЕДОМЛЕНИЕ О РАУНДЕ === */
+#round-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: #ffd700;
+    padding: 20px 40px;
+    border: 4px solid white;
+    font-size: 3rem;
+    z-index: 5000;
+    pointer-events: none;
+    text-shadow: 2px 2px 0 black;
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    animation: popIn 0.3s ease-out;
+    text-align: center;
+    width: 80%;
+}
+
+@keyframes popIn {
+    from { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
