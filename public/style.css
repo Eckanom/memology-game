@@ -1,7 +1,8 @@
-/* === ПОДКЛЮЧЕНИЕ ЛОКАЛЬНОГО ШРИФТА BADABOOM BB === */
+/* === ПОДКЛЮЧЕНИЕ ТВОЕГО ФАЙЛА ШРИФТА === */
 @font-face {
     font-family: 'BadaBoom BB';
-    src: url('badaboom.woff2') format('woff2');
+    /* Браузер будет искать файл badaboom.ttf в той же папке public */
+    src: url('badaboom.ttf') format('truetype'); 
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -19,6 +20,8 @@
     --border-black: #000000;
 }
 
+/* Применяем BadaBoom ко всем элементам. 
+   Если вдруг файл не загрузится, запасным будет Impact */
 * { font-family: 'BadaBoom BB', 'Impact', sans-serif !important; letter-spacing: 1px; }
 
 body {
@@ -50,6 +53,7 @@ body {
 
 .version-tag { position: absolute; bottom: 10px; right: 15px; font-size: 0.8rem; color: white; opacity: 0.8; pointer-events: none; text-shadow: 1px 1px 0 black; }
 
+/* Меню без лишних отступов для широкого логотипа */
 .menu-panel { 
     background-color: var(--panel-yellow); 
     border: 4px solid var(--border-black); 
@@ -66,6 +70,7 @@ body {
 }
 
 .logo-area { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 5px; width: 100%; }
+
 .game-logo {
     width: 100%;       
     max-width: 100%; 
@@ -75,6 +80,7 @@ body {
     filter: drop-shadow(4px 4px 0 white); 
     object-fit: cover;
 }
+
 .subtitle { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; color: black; margin-top: 0px;}
 
 .input-retro { width: 100%; padding: 15px; border: 3px solid black; font-size: 1.5rem; margin-bottom: 10px; box-sizing: border-box; text-align: center; border-radius: 0; text-transform: uppercase; }
@@ -241,7 +247,6 @@ input[type=range]::-webkit-slider-thumb { height: 24px; width: 24px; border: 2px
     background: #eee;
 }
 
-/* [NEW] СТИЛИ ДЛЯ БЫСТРЫХ ОТВЕТОВ */
 .quick-replies-container {
     display: flex;
     gap: 10px;
