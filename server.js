@@ -448,6 +448,27 @@ const TURN_TIMER_SECONDS = 30;
 
 const rooms = {};
 
+// === [NEW] ХЕЛПЕР ДЛЯ ОПРЕДЕЛЕНИЯ КАТЕГОРИИ ===
+const DECK_NAMES = {
+    everyday: 'ПОВСЕДНЕВНОСТЬ',
+    it: 'IT / РАБОТА',
+    gamers: 'ГЕЙМЕРЫ',
+    geeks: 'ГИКИ / КИНО',
+    girls: 'ДЕВУШКИ',
+    guys: 'ПАРНИ',
+    trolls: 'ТРОЛЛИ',
+    nsfw: 'NSFW 18+'
+};
+
+function getCategoryForScenario(text) {
+    for (const [key, deck] of Object.entries(SCENARIO_DECKS)) {
+        if (deck.includes(text)) {
+            return DECK_NAMES[key] || 'РАНДОМ';
+        }
+    }
+    return 'СМЕШАННОЕ';
+}
+
 io.on('connection', (socket) => {
     
     socket.on('joinRoom', ({ username, roomId }) => {
@@ -509,6 +530,8 @@ io.on('connection', (socket) => {
                 judgeId: judge.id,
                 judgeName: judge.username,
                 scenario: room.currentScenario,
+                // [NEW] Отправляем категорию при реконнекте
+                scenarioCategory: getCategoryForScenario(room.currentScenario),
                 hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
             });
             if (room.submissions.length > 0) socket.emit('updateSubmissionsCount', room.submissions.length);
@@ -516,6 +539,8 @@ io.on('connection', (socket) => {
                 socket.emit('gameState', {
                     state: 'judging',
                     scenario: room.currentScenario,
+                    // [NEW] Отправляем категорию
+                    scenarioCategory: getCategoryForScenario(room.currentScenario),
                     submissions: room.submissions,
                     judge: judge.username
                 });
@@ -545,7 +570,6 @@ io.on('connection', (socket) => {
         });
     });
 
-    // === [UPD] ВЕТТО (Сброс таймера) ===
     socket.on('useVeto', ({ roomId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'selection') return;
@@ -567,22 +591,22 @@ io.on('connection', (socket) => {
         
         room.usedScenarios.push(room.currentScenario);
 
-        io.to(roomId).emit('updateScenario', room.currentScenario);
+        // [NEW] Отправляем категорию при смене
+        const category = getCategoryForScenario(room.currentScenario);
+
+        io.to(roomId).emit('updateScenario', { text: room.currentScenario, category: category });
         io.to(roomId).emit('chatMessage', {
             sender: 'СИСТЕМА',
             text: `${player.username} применил ВЕТТО! Ситуация и таймер обновлены.`,
             isSystem: true
         });
         
-        // Обновляем состояние игрока для всех (чтобы кнопка стала неактивной)
         io.to(roomId).emit('updatePlayers', room.players); 
         socket.emit('updateModifiers', player.modifiers);
 
-        // СБРОС ТАЙМЕРА
         startRoundTimer(roomId, false);
     });
 
-    // === [UPD] ВТОРОЙ ШАНС (Сброс таймера) ===
     socket.on('useSecondChance', ({ roomId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'selection') return;
@@ -597,7 +621,6 @@ io.on('connection', (socket) => {
         socket.emit('updateHand', newHand);
         socket.emit('updateModifiers', player.modifiers);
         
-        // Обновляем состояние игрока для всех
         io.to(roomId).emit('updatePlayers', room.players);
 
         io.to(roomId).emit('chatMessage', {
@@ -606,7 +629,6 @@ io.on('connection', (socket) => {
             isSystem: true
         });
 
-        // СБРОС ТАЙМЕРА
         startRoundTimer(roomId, false);
     });
 
@@ -711,7 +733,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// АВТО-ОЧИСТКА
 const CLEANUP_INTERVAL = 60 * 60 * 1000; 
 const MAX_ROOM_LIFETIME = 2 * 60 * 60 * 1000; 
 
@@ -730,8 +751,6 @@ setInterval(() => {
     }
     if (global.gc) global.gc();
 }, CLEANUP_INTERVAL);
-
-// === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
 
 function calculateTitles(room) {
     if (room.players.length === 0) return;
@@ -793,6 +812,7 @@ function checkRoundEnd(roomId) {
         io.to(roomId).emit('gameState', {
             state: 'judging',
             scenario: room.currentScenario,
+            scenarioCategory: getCategoryForScenario(room.currentScenario),
             submissions: room.submissions,
             judge: judge.username
         });
@@ -880,8 +900,9 @@ function startRound(roomId) {
         judgeId: judge.id,
         judgeName: judge.username,
         scenario: room.currentScenario,
+        // [NEW]
+        scenarioCategory: getCategoryForScenario(room.currentScenario),
         hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
-        // Удалено 'modifiers' отсюда, чтобы не отправлять состояние судьи всем
     });
 
     startRoundTimer(roomId, false);
