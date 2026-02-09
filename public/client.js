@@ -63,6 +63,7 @@ let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0];
 let lastMainScreen = 'login';
 let returnToOptions = false; 
 let currentTimerEnd = 0;
+let allPlayers = []; // [UPD] Храним всех игроков глобально
 
 function updateCoinDisplay() {
     document.getElementById('coin-count').innerText = playerCoins;
@@ -292,7 +293,6 @@ function showScreen(name) {
         animateTimer(remaining);
     }
     
-    // [NEW] Показываем чат только внутри игры
     const chatFab = document.getElementById('chat-fab');
     if (name === 'game' || name === 'lobby' || name === 'gameover') {
         chatFab.style.display = 'flex';
@@ -332,6 +332,7 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
+    allPlayers = players; // [UPD] Сохраняем игроков
     const onlineCountLobby = document.getElementById('online-count');
     if(onlineCountLobby) onlineCountLobby.innerText = players.length;
 
@@ -378,7 +379,7 @@ socket.on('timerStart', ({ duration }) => {
     animateTimer(duration);
 });
 
-socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands, modifiers }) => {
+socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
     isGameStarted = true;
     showScreen('game');
     playSound('card');
@@ -394,16 +395,17 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands, mod
     document.getElementById('status-text').innerText = isJudge ? "ЖДЕМ КАРТЫ..." : "ВЫБЕРИ МЕМ!";
     document.getElementById('draw-btn').style.display = 'none';
 
-    // [NEW] Управление видимостью панели модификаторов
+    // [UPD] Проверка модификаторов для ТЕКУЩЕГО игрока
     const modPanel = document.getElementById('modifiers-bar');
     if (isJudge) {
         modPanel.style.display = 'none';
     } else {
         modPanel.style.display = 'flex';
-        // Обновляем доступность кнопок из данных сервера
-        if (modifiers) {
-            document.getElementById('btn-veto').disabled = !modifiers.veto;
-            document.getElementById('btn-second-chance').disabled = !modifiers.secondChance;
+        // Ищем себя в списке игроков
+        const me = allPlayers.find(p => p.id === myId);
+        if (me && me.modifiers) {
+            document.getElementById('btn-veto').disabled = !me.modifiers.veto;
+            document.getElementById('btn-second-chance').disabled = !me.modifiers.secondChance;
             document.getElementById('btn-input').disabled = false;
         }
     }
@@ -467,7 +469,6 @@ socket.on('gameState', (state) => {
             const card = document.createElement('div');
             card.className = 'judging-card';
             
-            // [NEW] Проверка: картинка или текст?
             if (sub.card.startsWith('text:')) {
                 const textContent = sub.card.substring(5); // Убираем 'text:'
                 card.innerHTML = `<div class="text-content">${textContent}</div>`;
@@ -508,7 +509,7 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
     document.getElementById('draw-btn').style.display = 'none';
     document.getElementById('modifiers-bar').style.display = 'none';
     document.getElementById('status-text').innerHTML = isDraw ? "🤝 ДРУЖБА!" : `ПОБЕДИТЕЛЬ: ${winnerName}`;
-    if(myPlayer) document.getElementById('score-board').innerText = `СЧЕТ: ${myPlayer.score}`;
+    // БЛОК СЧЕТА УДАЛЕН ИЗ HTML, ТУТ ОН НЕ НУЖЕН
 
     const container = document.getElementById('submissions-container');
     if (!isDraw && winningCard) {
@@ -543,7 +544,6 @@ socket.on('gameOver', (sortedPlayers) => {
     }).join('');
 });
 
-// === [NEW] ЛОГИКА ЧАТА ===
 let unreadMessages = false;
 
 function toggleChat() {
@@ -602,8 +602,6 @@ socket.on('chatMessage', (msg) => {
     }
 });
 
-// === [NEW] ЛОГИКА МОДИФИКАТОРОВ ===
-
 function useVeto() {
     showPopup("СМЕНИТЬ СИТУАЦИЮ? (1 раз)", () => {
         socket.emit('useVeto', { roomId: currentRoomId });
@@ -616,7 +614,6 @@ function useSecondChance() {
     }, true);
 }
 
-// === [NEW] ЛОГИКА СВОЕГО ОТВЕТА ===
 function openCustomAnswerInput() {
     document.getElementById('input-modal').style.display = 'flex';
     document.getElementById('custom-answer-text').value = '';
@@ -632,7 +629,6 @@ function closeCustomAnswerInput() {
 function submitCustomAnswer() {
     const text = document.getElementById('custom-answer-text').value.trim();
     if (text.length > 0) {
-        // Добавляем префикс, чтобы сервер и клиенты понимали, что это текст
         socket.emit('submitCard', { roomId: currentRoomId, card: 'text:' + text });
         closeCustomAnswerInput();
         document.getElementById('modifiers-bar').style.display = 'none';
