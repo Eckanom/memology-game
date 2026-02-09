@@ -51,12 +51,12 @@ body {
 
 .menu-panel { background-color: var(--panel-yellow); border: 4px solid var(--border-black); box-shadow: 10px 10px 0px 0px black; padding: 30px 20px; width: 100%; max-width: 360px; transform: rotate(-2deg); text-align: center; display: flex; flex-direction: column; gap: 15px; box-sizing: border-box; }
 
-/* [FIX] ЛОГОТИП КАРТИНКОЙ */
-.logo-area { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 10px; }
+/* [FIX] ЛОГОТИП НА ВСЮ ШИРИНУ */
+.logo-area { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 10px; width: 100%; }
 .game-logo {
-    max-width: 90%;
-    max-height: 180px; /* Ограничиваем высоту, чтобы влезало на мобилке */
-    width: auto;
+    width: 100%;       /* Занимаем всю доступную ширину (как поля ввода) */
+    max-width: 100%;   /* Не вылезаем за рамки */
+    height: auto;      /* Высота подстраивается автоматически */
     display: block;
     margin: 0 auto;
     filter: drop-shadow(4px 4px 0 white); 
