@@ -388,11 +388,9 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, scenarioCa
     myId = socket.id;
     isJudge = (myId === judgeId);
     
-    // [UPD] Всплывающее уведомление о раунде
     const roundNotify = document.getElementById('round-notification');
     roundNotify.innerText = `РАУНД ${roundNumber}/${totalRounds}`;
     roundNotify.style.display = 'block';
-    // Простая анимация появления/исчезновения через CSS или просто таймер
     setTimeout(() => {
         roundNotify.style.display = 'none';
     }, 2000);
@@ -404,7 +402,6 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, scenarioCa
     
     document.getElementById('scenario-text').innerText = scenario;
     
-    // [UPD] Обновление заголовка с категорией
     const categoryText = scenarioCategory ? scenarioCategory.toUpperCase() : 'РАНДОМ';
     document.getElementById('scenario-header').innerText = `СИТУАЦИЯ / ${categoryText}`;
 
@@ -435,7 +432,6 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, scenarioCa
 });
 
 socket.on('updateScenario', (data) => {
-    // data теперь может приходить объектом { text, category }
     if (typeof data === 'object') {
         document.getElementById('scenario-text').innerText = data.text;
         document.getElementById('scenario-header').innerText = `СИТУАЦИЯ / ${data.category}`;
@@ -478,7 +474,6 @@ socket.on('updateSubmissionsCount', (count) => {
 });
 
 socket.on('gameState', (state) => {
-    // Если мы реконнектимся и сервер прислал категорию
     if (state.scenarioCategory) {
         document.getElementById('scenario-header').innerText = `СИТУАЦИЯ / ${state.scenarioCategory}`;
     }
@@ -573,8 +568,29 @@ socket.on('gameOver', (sortedPlayers) => {
     }).join('');
 });
 
-// Чат
+// === ЛОГИКА ЧАТА И БЫСТРЫХ ОТВЕТОВ ===
 let unreadMessages = false;
+
+const QUICK_REPLIES = [
+    "АХАХА 😂", "БОЖЕ... 🤦‍♂️", "ОСУЖДАЮ 🤨", "КРИНЖ 😬", "ЖИЗА 🔥", "РИП 💀", "GG 🤝", "НУ ТАКОЕ 😐"
+];
+
+function initQuickReplies() {
+    const container = document.getElementById('quick-replies');
+    container.innerHTML = '';
+    QUICK_REPLIES.forEach(text => {
+        const btn = document.createElement('button');
+        btn.className = 'quick-reply-btn';
+        btn.innerText = text;
+        btn.onclick = () => {
+            if (currentRoomId) {
+                socket.emit('chatMessage', { roomId: currentRoomId, message: text });
+            }
+        };
+        container.appendChild(btn);
+    });
+}
+
 function toggleChat() {
     const overlay = document.getElementById('chat-overlay');
     const badge = document.getElementById('chat-badge');
@@ -582,12 +598,14 @@ function toggleChat() {
         overlay.style.display = 'flex';
         unreadMessages = false;
         badge.style.display = 'none';
+        initQuickReplies(); // Инициализация при открытии
         document.getElementById('chat-input').focus();
     } else {
         overlay.style.display = 'none';
     }
     playSound('click');
 }
+
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
@@ -596,9 +614,11 @@ function sendChatMessage() {
         input.value = '';
     }
 }
+
 document.getElementById('chat-input').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') sendChatMessage();
 });
+
 socket.on('chatMessage', (msg) => {
     const container = document.getElementById('chat-messages');
     const div = document.createElement('div');
