@@ -63,7 +63,7 @@ let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0];
 let lastMainScreen = 'login';
 let returnToOptions = false; 
 let currentTimerEnd = 0;
-let allPlayers = []; // [UPD] Храним всех игроков глобально
+let allPlayers = []; 
 
 function updateCoinDisplay() {
     document.getElementById('coin-count').innerText = playerCoins;
@@ -332,7 +332,7 @@ socket.on('syncSettings', (settings) => {
 });
 
 socket.on('updatePlayers', (players) => {
-    allPlayers = players; // [UPD] Сохраняем игроков
+    allPlayers = players; 
     const onlineCountLobby = document.getElementById('online-count');
     if(onlineCountLobby) onlineCountLobby.innerText = players.length;
 
@@ -367,9 +367,11 @@ function animateTimer(duration) {
     const bar = document.getElementById('timer-bar');
     const container = document.getElementById('timer-container');
     container.style.display = 'block';
+    
     bar.style.transition = 'none';
     bar.style.width = '100%';
-    void bar.offsetWidth;
+    void bar.offsetWidth; 
+    
     bar.style.transition = `width ${duration}s linear`;
     bar.style.width = '0%';
 }
@@ -379,29 +381,42 @@ socket.on('timerStart', ({ duration }) => {
     animateTimer(duration);
 });
 
-socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
+socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, scenarioCategory, hands }) => {
     isGameStarted = true;
     showScreen('game');
     playSound('card');
     myId = socket.id;
     isJudge = (myId === judgeId);
-    document.getElementById('round-display').innerText = `${roundNumber}/${totalRounds}`;
+    
+    // [UPD] Всплывающее уведомление о раунде
+    const roundNotify = document.getElementById('round-notification');
+    roundNotify.innerText = `РАУНД ${roundNumber}/${totalRounds}`;
+    roundNotify.style.display = 'block';
+    // Простая анимация появления/исчезновения через CSS или просто таймер
+    setTimeout(() => {
+        roundNotify.style.display = 'none';
+    }, 2000);
+
     const playerCount = hands.length;
     const badge = document.getElementById('role-badge');
-    badge.innerText = isJudge ? `ТЫ СУДЬЯ / ${playerCount}` : `ТЫ ИГРОК / ${playerCount}`;
+    badge.innerText = isJudge ? `ТЫ СУДЬЯ` : `ТЫ ИГРОК`;
     badge.style.color = "black"; 
+    
     document.getElementById('scenario-text').innerText = scenario;
+    
+    // [UPD] Обновление заголовка с категорией
+    const categoryText = scenarioCategory ? scenarioCategory.toUpperCase() : 'РАНДОМ';
+    document.getElementById('scenario-header').innerText = `СИТУАЦИЯ / ${categoryText}`;
+
     document.getElementById('submissions-container').innerHTML = '';
     document.getElementById('status-text').innerText = isJudge ? "ЖДЕМ КАРТЫ..." : "ВЫБЕРИ МЕМ!";
     document.getElementById('draw-btn').style.display = 'none';
 
-    // [UPD] Проверка модификаторов для ТЕКУЩЕГО игрока
     const modPanel = document.getElementById('modifiers-bar');
     if (isJudge) {
         modPanel.style.display = 'none';
     } else {
         modPanel.style.display = 'flex';
-        // Ищем себя в списке игроков
         const me = allPlayers.find(p => p.id === myId);
         if (me && me.modifiers) {
             document.getElementById('btn-veto').disabled = !me.modifiers.veto;
@@ -419,6 +434,21 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
     }
 });
 
+socket.on('updateScenario', (data) => {
+    // data теперь может приходить объектом { text, category }
+    if (typeof data === 'object') {
+        document.getElementById('scenario-text').innerText = data.text;
+        document.getElementById('scenario-header').innerText = `СИТУАЦИЯ / ${data.category}`;
+    } else {
+        document.getElementById('scenario-text').innerText = data;
+    }
+    
+    playSound('click');
+    const card = document.querySelector('.scenario-card-modern');
+    card.style.transform = 'rotate(5deg) scale(1.05)';
+    setTimeout(() => card.style.transform = 'rotate(1deg)', 300);
+});
+
 function renderHand(cards) {
     const container = document.getElementById('my-hand');
     container.innerHTML = '';
@@ -430,7 +460,6 @@ function renderHand(cards) {
             if (isJudge) return;
             playSound('click');
             document.getElementById('hand-area').style.display = 'none';
-            document.getElementById('modifiers-bar').style.display = 'none';
             document.getElementById('status-text').innerText = "ЖДЕМ ОСТАЛЬНЫХ...";
             socket.emit('submitCard', { roomId: currentRoomId, card: imgSrc });
         };
@@ -449,13 +478,15 @@ socket.on('updateSubmissionsCount', (count) => {
 });
 
 socket.on('gameState', (state) => {
+    // Если мы реконнектимся и сервер прислал категорию
+    if (state.scenarioCategory) {
+        document.getElementById('scenario-header').innerText = `СИТУАЦИЯ / ${state.scenarioCategory}`;
+    }
+
     if (state.state === 'judging') {
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
         document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : "СУДЬЯ ВЫБИРАЕТ...";
-        document.getElementById('modifiers-bar').style.display = 'none';
-        document.getElementById('hand-area').style.display = 'none';
-
         if (isJudge) {
             const drawBtn = document.getElementById('draw-btn');
             drawBtn.style.display = 'inline-block';
@@ -470,7 +501,7 @@ socket.on('gameState', (state) => {
             card.className = 'judging-card';
             
             if (sub.card.startsWith('text:')) {
-                const textContent = sub.card.substring(5); // Убираем 'text:'
+                const textContent = sub.card.substring(5); 
                 card.innerHTML = `<div class="text-content">${textContent}</div>`;
             } else {
                 card.innerHTML = `<img src="${sub.card}">`;
@@ -507,9 +538,7 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
 
     document.getElementById('timer-container').style.display = 'none';
     document.getElementById('draw-btn').style.display = 'none';
-    document.getElementById('modifiers-bar').style.display = 'none';
     document.getElementById('status-text').innerHTML = isDraw ? "🤝 ДРУЖБА!" : `ПОБЕДИТЕЛЬ: ${winnerName}`;
-    // БЛОК СЧЕТА УДАЛЕН ИЗ HTML, ТУТ ОН НЕ НУЖЕН
 
     const container = document.getElementById('submissions-container');
     if (!isDraw && winningCard) {
@@ -544,12 +573,11 @@ socket.on('gameOver', (sortedPlayers) => {
     }).join('');
 });
 
+// Чат
 let unreadMessages = false;
-
 function toggleChat() {
     const overlay = document.getElementById('chat-overlay');
     const badge = document.getElementById('chat-badge');
-    
     if (overlay.style.display === 'none') {
         overlay.style.display = 'flex';
         unreadMessages = false;
@@ -560,7 +588,6 @@ function toggleChat() {
     }
     playSound('click');
 }
-
 function sendChatMessage() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
@@ -569,15 +596,12 @@ function sendChatMessage() {
         input.value = '';
     }
 }
-
 document.getElementById('chat-input').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') sendChatMessage();
 });
-
 socket.on('chatMessage', (msg) => {
     const container = document.getElementById('chat-messages');
     const div = document.createElement('div');
-    
     if (msg.isSystem) {
         div.className = 'chat-system';
         div.innerText = msg.text;
@@ -591,10 +615,8 @@ socket.on('chatMessage', (msg) => {
             </div>
         `;
     }
-    
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
-
     const overlay = document.getElementById('chat-overlay');
     if (overlay.style.display === 'none') {
         unreadMessages = true;
@@ -602,30 +624,27 @@ socket.on('chatMessage', (msg) => {
     }
 });
 
+// Модификаторы
 function useVeto() {
     showPopup("СМЕНИТЬ СИТУАЦИЮ? (1 раз)", () => {
         socket.emit('useVeto', { roomId: currentRoomId });
     }, true);
 }
-
 function useSecondChance() {
     showPopup("СБРОСИТЬ КАРТЫ? (1 раз)", () => {
         socket.emit('useSecondChance', { roomId: currentRoomId });
     }, true);
 }
-
 function openCustomAnswerInput() {
     document.getElementById('input-modal').style.display = 'flex';
     document.getElementById('custom-answer-text').value = '';
     document.getElementById('custom-answer-text').focus();
     playSound('click');
 }
-
 function closeCustomAnswerInput() {
     document.getElementById('input-modal').style.display = 'none';
     playSound('click');
 }
-
 function submitCustomAnswer() {
     const text = document.getElementById('custom-answer-text').value.trim();
     if (text.length > 0) {
@@ -638,14 +657,6 @@ function submitCustomAnswer() {
         showPopup("НАПИШИ ХОТЬ ЧТО-ТО!");
     }
 }
-
-socket.on('updateScenario', (newScenario) => {
-    document.getElementById('scenario-text').innerText = newScenario;
-    playSound('click');
-    const card = document.querySelector('.scenario-card-modern');
-    card.style.transform = 'rotate(5deg) scale(1.05)';
-    setTimeout(() => card.style.transform = 'rotate(1deg)', 300);
-});
 
 socket.on('updateHand', (newHand) => {
     renderHand(newHand);
