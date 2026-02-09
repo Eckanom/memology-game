@@ -62,7 +62,7 @@ let playerCoins = parseInt(localStorage.getItem('memeCoins')) || 0;
 let ownedPacks = JSON.parse(localStorage.getItem('ownedPacks')) || [0]; 
 let lastMainScreen = 'login';
 let returnToOptions = false; 
-let currentTimerEnd = 0; // ВРЕМЯ ОКОНЧАНИЯ ТАЙМЕРА
+let currentTimerEnd = 0;
 
 function updateCoinDisplay() {
     document.getElementById('coin-count').innerText = playerCoins;
@@ -287,10 +287,17 @@ function showScreen(name) {
         updateCoinDisplay();
     }
     
-    // === ВОССТАНОВЛЕНИЕ ТАЙМЕРА ПРИ ВОЗВРАТЕ В ИГРУ ===
     if (name === 'game' && currentTimerEnd > Date.now()) {
         const remaining = (currentTimerEnd - Date.now()) / 1000;
         animateTimer(remaining);
+    }
+    
+    // [NEW] Показываем чат только внутри игры
+    const chatFab = document.getElementById('chat-fab');
+    if (name === 'game' || name === 'lobby' || name === 'gameover') {
+        chatFab.style.display = 'flex';
+    } else {
+        chatFab.style.display = 'none';
     }
 }
 
@@ -355,29 +362,23 @@ function startGame() {
     socket.emit('startGame', currentRoomId);
 }
 
-// === НОВАЯ ФУНКЦИЯ АНИМАЦИИ ТАЙМЕРА ===
 function animateTimer(duration) {
     const bar = document.getElementById('timer-bar');
     const container = document.getElementById('timer-container');
     container.style.display = 'block';
-    
-    // Мгновенный сброс для старта
     bar.style.transition = 'none';
     bar.style.width = '100%';
-    void bar.offsetWidth; // Force reflow
-    
-    // Запуск анимации
+    void bar.offsetWidth;
     bar.style.transition = `width ${duration}s linear`;
     bar.style.width = '0%';
 }
 
 socket.on('timerStart', ({ duration }) => {
-    // Сохраняем время окончания локально
     currentTimerEnd = Date.now() + (duration * 1000);
     animateTimer(duration);
 });
 
-socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) => {
+socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands, modifiers }) => {
     isGameStarted = true;
     showScreen('game');
     playSound('card');
@@ -392,6 +393,20 @@ socket.on('newRound', ({ roundNumber, totalRounds, judgeId, scenario, hands }) =
     document.getElementById('submissions-container').innerHTML = '';
     document.getElementById('status-text').innerText = isJudge ? "ЖДЕМ КАРТЫ..." : "ВЫБЕРИ МЕМ!";
     document.getElementById('draw-btn').style.display = 'none';
+
+    // [NEW] Управление видимостью панели модификаторов
+    const modPanel = document.getElementById('modifiers-bar');
+    if (isJudge) {
+        modPanel.style.display = 'none';
+    } else {
+        modPanel.style.display = 'flex';
+        // Обновляем доступность кнопок из данных сервера
+        if (modifiers) {
+            document.getElementById('btn-veto').disabled = !modifiers.veto;
+            document.getElementById('btn-second-chance').disabled = !modifiers.secondChance;
+            document.getElementById('btn-input').disabled = false;
+        }
+    }
 
     const myHandData = hands.find(h => h.id === myId);
     if (myHandData && !isJudge) {
@@ -413,6 +428,7 @@ function renderHand(cards) {
             if (isJudge) return;
             playSound('click');
             document.getElementById('hand-area').style.display = 'none';
+            document.getElementById('modifiers-bar').style.display = 'none';
             document.getElementById('status-text').innerText = "ЖДЕМ ОСТАЛЬНЫХ...";
             socket.emit('submitCard', { roomId: currentRoomId, card: imgSrc });
         };
@@ -435,6 +451,9 @@ socket.on('gameState', (state) => {
         const container = document.getElementById('submissions-container');
         container.innerHTML = '';
         document.getElementById('status-text').innerText = isJudge ? "ВЫБИРАЙ ЛУЧШИЙ!" : "СУДЬЯ ВЫБИРАЕТ...";
+        document.getElementById('modifiers-bar').style.display = 'none';
+        document.getElementById('hand-area').style.display = 'none';
+
         if (isJudge) {
             const drawBtn = document.getElementById('draw-btn');
             drawBtn.style.display = 'inline-block';
@@ -447,7 +466,15 @@ socket.on('gameState', (state) => {
         state.submissions.forEach(sub => {
             const card = document.createElement('div');
             card.className = 'judging-card';
-            card.innerHTML = `<img src="${sub.card}">`;
+            
+            // [NEW] Проверка: картинка или текст?
+            if (sub.card.startsWith('text:')) {
+                const textContent = sub.card.substring(5); // Убираем 'text:'
+                card.innerHTML = `<div class="text-content">${textContent}</div>`;
+            } else {
+                card.innerHTML = `<img src="${sub.card}">`;
+            }
+
             if (isJudge) {
                 card.style.cursor = 'pointer';
                 card.onclick = () => {
@@ -479,12 +506,17 @@ socket.on('roundResult', ({ winnerName, winningCard, players, isDraw }) => {
 
     document.getElementById('timer-container').style.display = 'none';
     document.getElementById('draw-btn').style.display = 'none';
+    document.getElementById('modifiers-bar').style.display = 'none';
     document.getElementById('status-text').innerHTML = isDraw ? "🤝 ДРУЖБА!" : `ПОБЕДИТЕЛЬ: ${winnerName}`;
     if(myPlayer) document.getElementById('score-board').innerText = `СЧЕТ: ${myPlayer.score}`;
 
     const container = document.getElementById('submissions-container');
-    if (!isDraw) {
-        container.innerHTML = `<div class="judging-card" style="transform:scale(1.2); border-color:var(--btn-green); width:90px; height:130px;"><img src="${winningCard}"></div>`;
+    if (!isDraw && winningCard) {
+        if (winningCard.startsWith('text:')) {
+            container.innerHTML = `<div class="judging-card" style="transform:scale(1.2); border-color:var(--btn-green); width:90px; height:130px;"><div class="text-content">${winningCard.substring(5)}</div></div>`;
+        } else {
+            container.innerHTML = `<div class="judging-card" style="transform:scale(1.2); border-color:var(--btn-green); width:90px; height:130px;"><img src="${winningCard}"></div>`;
+        }
     } else {
         container.innerHTML = `<div style="font-size:3rem;">🤝</div>`;
     }
@@ -509,4 +541,122 @@ socket.on('gameOver', (sortedPlayers) => {
             <span>${p.score}</span>
         </div>`;
     }).join('');
+});
+
+// === [NEW] ЛОГИКА ЧАТА ===
+let unreadMessages = false;
+
+function toggleChat() {
+    const overlay = document.getElementById('chat-overlay');
+    const badge = document.getElementById('chat-badge');
+    
+    if (overlay.style.display === 'none') {
+        overlay.style.display = 'flex';
+        unreadMessages = false;
+        badge.style.display = 'none';
+        document.getElementById('chat-input').focus();
+    } else {
+        overlay.style.display = 'none';
+    }
+    playSound('click');
+}
+
+function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (text && currentRoomId) {
+        socket.emit('chatMessage', { roomId: currentRoomId, message: text });
+        input.value = '';
+    }
+}
+
+document.getElementById('chat-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') sendChatMessage();
+});
+
+socket.on('chatMessage', (msg) => {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    
+    if (msg.isSystem) {
+        div.className = 'chat-system';
+        div.innerText = msg.text;
+    } else {
+        div.className = 'chat-msg';
+        div.innerHTML = `
+            <img src="${msg.avatar}">
+            <div style="display:flex; flex-direction:column;">
+                <span style="font-size:0.7rem; color:#666;">${msg.sender}</span>
+                <div class="chat-bubble">${msg.text}</div>
+            </div>
+        `;
+    }
+    
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+
+    const overlay = document.getElementById('chat-overlay');
+    if (overlay.style.display === 'none') {
+        unreadMessages = true;
+        document.getElementById('chat-badge').style.display = 'block';
+    }
+});
+
+// === [NEW] ЛОГИКА МОДИФИКАТОРОВ ===
+
+function useVeto() {
+    showPopup("СМЕНИТЬ СИТУАЦИЮ? (1 раз)", () => {
+        socket.emit('useVeto', { roomId: currentRoomId });
+    }, true);
+}
+
+function useSecondChance() {
+    showPopup("СБРОСИТЬ КАРТЫ? (1 раз)", () => {
+        socket.emit('useSecondChance', { roomId: currentRoomId });
+    }, true);
+}
+
+// === [NEW] ЛОГИКА СВОЕГО ОТВЕТА ===
+function openCustomAnswerInput() {
+    document.getElementById('input-modal').style.display = 'flex';
+    document.getElementById('custom-answer-text').value = '';
+    document.getElementById('custom-answer-text').focus();
+    playSound('click');
+}
+
+function closeCustomAnswerInput() {
+    document.getElementById('input-modal').style.display = 'none';
+    playSound('click');
+}
+
+function submitCustomAnswer() {
+    const text = document.getElementById('custom-answer-text').value.trim();
+    if (text.length > 0) {
+        // Добавляем префикс, чтобы сервер и клиенты понимали, что это текст
+        socket.emit('submitCard', { roomId: currentRoomId, card: 'text:' + text });
+        closeCustomAnswerInput();
+        document.getElementById('modifiers-bar').style.display = 'none';
+        document.getElementById('hand-area').style.display = 'none';
+        document.getElementById('status-text').innerText = "ЖДЕМ ОСТАЛЬНЫХ...";
+    } else {
+        showPopup("НАПИШИ ХОТЬ ЧТО-ТО!");
+    }
+}
+
+socket.on('updateScenario', (newScenario) => {
+    document.getElementById('scenario-text').innerText = newScenario;
+    playSound('click');
+    const card = document.querySelector('.scenario-card-modern');
+    card.style.transform = 'rotate(5deg) scale(1.05)';
+    setTimeout(() => card.style.transform = 'rotate(1deg)', 300);
+});
+
+socket.on('updateHand', (newHand) => {
+    renderHand(newHand);
+    playSound('draw');
+});
+
+socket.on('updateModifiers', (mods) => {
+    document.getElementById('btn-veto').disabled = !mods.veto;
+    document.getElementById('btn-second-chance').disabled = !mods.secondChance;
 });
