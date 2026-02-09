@@ -37,7 +37,7 @@
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
             </div>
-            <div class="version-tag">v3.2.0 Final Fix</div>
+            <div class="version-tag">v3.3.0 Logo Full Width</div>
         </div>
 
         <div id="lobby-screen" class="screen">
@@ -160,7 +160,8 @@
                     <span>ЧАТ</span>
                     <button onclick="toggleChat()" style="background:var(--btn-red); color:white; border:2px solid black; padding: 0 10px;">X</button>
                 </div>
-                <div id="chat-messages" class="chat-messages"></div>
+                <div id="chat-messages" class="chat-messages">
+                    </div>
                 
                 <div id="quick-replies" class="quick-replies-container"></div>
 
@@ -182,18 +183,23 @@
         <div id="settings-modal" class="modal-overlay" style="display: none;">
             <div class="modal-card">
                 <h2>ОПЦИИ</h2>
+                
                 <button class="retro-btn btn-shop" onclick="openShop()" style="margin-bottom:15px;">МАГАЗИН КАРТ</button>
+
                 <button class="retro-btn btn-blue" onclick="testSound()" style="margin-bottom:15px;">ПРОВЕРИТЬ ЗВУК</button>
+
                 <div class="setting-item">
                     <label>ГРОМКОСТЬ: <span id="volume-value">5</span></label>
                     <input type="range" id="volume-slider" min="0" max="10" value="5" oninput="updateVolume(this.value)">
                 </div>
+
                 <div class="setting-item" style="border-top:2px solid black; padding-top:10px;">
                     <div class="nsfw-toggle-menu" style="justify-content:space-between;">
                         <label for="bot-check-modal">ИГРАТЬ С БОТАМИ</label>
                         <input type="checkbox" id="bot-check-modal" onchange="updateGameSettings()">
                     </div>
                 </div>
+
                 <div class="setting-item" style="text-align:left;">
                     <label style="display:block; margin-bottom:5px;">КОЛОДЫ ВОПРОСОВ:</label>
                     <div class="deck-grid">
@@ -207,6 +213,7 @@
                         <label style="color:red; font-weight:bold;"><input type="checkbox" class="deck-check" value="nsfw" onchange="updateGameSettings()"> NSFW 18+</label>
                     </div>
                 </div>
+
                 <button class="retro-btn btn-start" onclick="closeSettings()">ЗАКРЫТЬ</button>
                 <button class="retro-btn" style="background:black; color:white; margin-top:10px;" onclick="leaveGame()">ВЫЙТИ В МЕНЮ</button>
             </div>
