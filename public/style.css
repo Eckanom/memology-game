@@ -54,7 +54,7 @@ body {
 /* [FIX] ЛОГОТИП НА ВСЮ ШИРИНУ */
 .logo-area { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 10px; width: 100%; }
 .game-logo {
-    width: 100%;       /* Занимаем всю доступную ширину (как поля ввода) */
+    width: 100%;       /* Занимаем всю доступную ширину */
     max-width: 100%;   /* Не вылезаем за рамки */
     height: auto;      /* Высота подстраивается автоматически */
     display: block;
