@@ -35,7 +35,7 @@
                     <button class="retro-btn btn-options" onclick="openSettings()">ОПЦИИ</button>
                 </div>
             </div>
-            <div class="version-tag">v2.8.0 Timer Fix</div>
+            <div class="version-tag">v2.9.0 Mods Update</div>
         </div>
 
         <div id="lobby-screen" class="screen">
@@ -131,9 +131,41 @@
                 <div id="submissions-container" class="submissions-grid"></div>
             </div>
 
+            <div id="modifiers-bar" class="modifiers-bar" style="display:none;">
+                <button id="btn-veto" class="modifier-btn" onclick="useVeto()">
+                    🚫 ВЕТТО
+                </button>
+                <button id="btn-input" class="modifier-btn" style="background: var(--panel-yellow);" onclick="openCustomAnswerInput()">
+                    ✍️ СВОЙ ОТВЕТ
+                </button>
+                <button id="btn-second-chance" class="modifier-btn" onclick="useSecondChance()">
+                    🔄 РЕРОЛЛ
+                </button>
+            </div>
+
             <div id="hand-area">
                 <div class="hand-label">ТВОИ КАРТЫ</div>
                 <div id="my-hand" class="hand-scroll"></div>
+            </div>
+
+            <button id="chat-fab" class="chat-fab" onclick="toggleChat()">
+                💬
+                <div id="chat-badge" class="chat-badge" style="display:none;"></div>
+            </button>
+        </div>
+
+        <div id="chat-overlay" class="chat-overlay" style="display: none;">
+            <div class="chat-window">
+                <div class="chat-header">
+                    <span>ЧАТ</span>
+                    <button onclick="toggleChat()" style="background:var(--btn-red); color:white; border:2px solid black; padding: 0 10px;">X</button>
+                </div>
+                <div id="chat-messages" class="chat-messages">
+                    </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="..." maxlength="50">
+                    <button onclick="sendChatMessage()">➤</button>
+                </div>
             </div>
         </div>
 
@@ -190,6 +222,17 @@
                 <div style="display:flex; gap:10px; justify-content:center; width:100%;">
                     <button id="modal-yes" class="retro-btn btn-green" style="margin:0;">OK</button>
                     <button id="modal-no" class="retro-btn" style="background:red; margin:0; display:none;">ОТМЕНА</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="input-modal" class="modal-overlay" style="display:none; z-index: 3100;">
+            <div class="modal-card" style="background:var(--card-white);">
+                <h2>ТВОЙ ОТВЕТ</h2>
+                <textarea id="custom-answer-text" class="input-retro" style="height:100px; text-align:left; font-size:1.2rem;" placeholder="Шути смешно..."></textarea>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="retro-btn btn-green" onclick="submitCustomAnswer()">ОТПРАВИТЬ</button>
+                    <button class="retro-btn btn-red" style="background:red;" onclick="closeCustomAnswerInput()">ОТМЕНА</button>
                 </div>
             </div>
         </div>
