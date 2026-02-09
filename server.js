@@ -15,7 +15,7 @@ const io = new Server(server, {
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === БАЗА ДАННЫХ ВОПРОСОВ (Оставил как было) ===
+// === БАЗА ДАННЫХ ВОПРОСОВ ===
 const SCENARIO_DECKS = {
     everyday: [
         "Твое лицо, когда открыл холодильник, а там пусто, хотя проверял 5 минут назад",
@@ -69,14 +69,37 @@ const SCENARIO_DECKS = {
         "Когда ты пытаешься сделать вид, что понимаешь шутку, но не понимаешь",
         "Твое лицо, когда кто-то говорит «ихний» или «вообщем»"
     ],
-    // ... остальные колоды можно оставить те же, код будет работать ...
+    it: [
+        "Твое лицо, когда код скомпилировался без ошибок с первого раза (подозрительно)",
+        "Когда ты уронил прод в пятницу вечером",
+        "Тот момент, когда заказчик просит поиграть со шрифтами",
+        "Когда джун случайно удалил базу данных",
+        "Твое лицо, когда ты видишь легаси код десятилетней давности",
+        "Когда менеджер спрашивает: «А можно сделать это к завтрашнему утру?»",
+        "Тот момент, когда ты нашел решение на Stack Overflow, но ссылка не работает",
+        "Когда ты пытаешься объяснить бабушке, чем ты занимаешься на работе",
+        "Твое лицо, когда кто-то говорит, что HTML — это язык программирования",
+        "Когда ты забыл точку с запятой и ищешь ошибку 2 часа",
+        "Твое лицо, когда интернет отвалился во время деплоя",
+        "Когда ты видишь, как кто-то печатает одним пальцем",
+        "Тот момент, когда тестеровщик нашел баг за 5 минут до релиза",
+        "Когда ты пытаешься починить принтер в бухгалтерии",
+        "Твое лицо, когда ты видишь зарплату сеньора в другой компании",
+        "Когда ты работаешь на удаленке и забыл выключить камеру в Zoom",
+        "Тот момент, когда ты закрыл задачу, а она вернулась через час",
+        "Когда ты пытаешься объяснить, что «оно работает на моей машине»",
+        "Твое лицо, когда ты видишь код, который написал полгода назад",
+        "Когда ты забыл пароль от судо"
+    ],
+    // ... (остальные колоды остаются без изменений для экономии места, код будет работать)
 };
 
 // === 100 КАРТ .PNG ===
 const TOTAL_IMAGES = 100; 
 const MEME_CARDS = Array.from({ length: TOTAL_IMAGES }, (_, i) => `/memes/${i + 1}.png`);
-// === ТАЙМЕР ХОДА (20 СЕКУНД) ===
-const TURN_TIMER_SECONDS = 20;
+
+// === [UPD] ТАЙМЕР ХОДА (30 СЕКУНД) ===
+const TURN_TIMER_SECONDS = 30;
 
 const rooms = {};
 
@@ -122,7 +145,6 @@ io.on('connection', (socket) => {
                 avatar: avatarUrl,
                 title: 'Новичок',
                 winStreak: 0,
-                // [NEW] Способности
                 modifiers: {
                     veto: true,
                     secondChance: true
@@ -142,9 +164,7 @@ io.on('connection', (socket) => {
                 judgeId: judge.id,
                 judgeName: judge.username,
                 scenario: room.currentScenario,
-                hands: room.players.map(p => ({ id: p.id, hand: p.hand })),
-                // [NEW] Отправляем состояние модификаторов при реконнекте
-                modifiers: existingPlayer ? existingPlayer.modifiers : { veto: true, secondChance: true }
+                hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
             });
             if (room.submissions.length > 0) socket.emit('updateSubmissionsCount', room.submissions.length);
             if (room.gameState === 'judging') {
@@ -166,7 +186,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // === [NEW] ЧАТ ===
     socket.on('chatMessage', ({ roomId, message }) => {
         const room = rooms[roomId];
         if (!room) return;
@@ -181,17 +200,15 @@ io.on('connection', (socket) => {
         });
     });
 
-    // === [NEW] ВЕТТО (Смена сценария) ===
+    // === [UPD] ВЕТТО (Сброс таймера) ===
     socket.on('useVeto', ({ roomId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'selection') return;
         const player = room.players.find(p => p.id === socket.id);
         if (!player || !player.modifiers.veto) return;
 
-        // Тратим способность
         player.modifiers.veto = false;
         
-        // Генерируем новый сценарий
         let pool = [];
         room.activeDecks.forEach(deckId => {
             if (SCENARIO_DECKS[deckId]) pool.push(...SCENARIO_DECKS[deckId]);
@@ -205,19 +222,22 @@ io.on('connection', (socket) => {
         
         room.usedScenarios.push(room.currentScenario);
 
-        // Уведомляем всех
         io.to(roomId).emit('updateScenario', room.currentScenario);
         io.to(roomId).emit('chatMessage', {
             sender: 'СИСТЕМА',
-            text: `${player.username} применил ВЕТТО и сменил ситуацию!`,
+            text: `${player.username} применил ВЕТТО! Ситуация и таймер обновлены.`,
             isSystem: true
         });
         
-        // Обновляем кнопку только у этого игрока
+        // Обновляем состояние игрока для всех (чтобы кнопка стала неактивной)
+        io.to(roomId).emit('updatePlayers', room.players); 
         socket.emit('updateModifiers', player.modifiers);
+
+        // СБРОС ТАЙМЕРА
+        startRoundTimer(roomId, false);
     });
 
-    // === [NEW] ВТОРОЙ ШАНС (Смена руки) ===
+    // === [UPD] ВТОРОЙ ШАНС (Сброс таймера) ===
     socket.on('useSecondChance', ({ roomId }) => {
         const room = rooms[roomId];
         if (!room || room.gameState !== 'selection') return;
@@ -226,18 +246,23 @@ io.on('connection', (socket) => {
 
         player.modifiers.secondChance = false;
         
-        // Выдаем 5 новых карт
         const newHand = dealCards(room, 5);
         player.hand = newHand;
 
         socket.emit('updateHand', newHand);
         socket.emit('updateModifiers', player.modifiers);
         
+        // Обновляем состояние игрока для всех
+        io.to(roomId).emit('updatePlayers', room.players);
+
         io.to(roomId).emit('chatMessage', {
             sender: 'СИСТЕМА',
-            text: `${player.username} сбросил карты и взял новые!`,
+            text: `${player.username} сбросил карты! Таймер обновлен.`,
             isSystem: true
         });
+
+        // СБРОС ТАЙМЕРА
+        startRoundTimer(roomId, false);
     });
 
     socket.on('updateSettings', ({ roomId, withBots, activeDecks }) => {
@@ -403,8 +428,6 @@ function processSubmission(room, playerId, card) {
 
     room.submissions.push({ playerId: player.id, card: card, username: player.username });
     
-    // Если это была карта из руки (не текстовый ввод), удаляем ее
-    // Текстовый ввод мы будем помечать префиксом "text:"
     if (!card.startsWith('text:')) {
         player.hand = player.hand.filter(c => c !== card);
         const newCards = dealCards(room, 1);
@@ -512,10 +535,8 @@ function startRound(roomId) {
         judgeId: judge.id,
         judgeName: judge.username,
         scenario: room.currentScenario,
-        hands: room.players.map(p => ({ id: p.id, hand: p.hand })),
-        // Не забываем передать актуальные модификаторы при старте раунда, 
-        // хотя клиент их и так помнит, но для страховки можно
-        modifiers: judge.modifiers 
+        hands: room.players.map(p => ({ id: p.id, hand: p.hand }))
+        // Удалено 'modifiers' отсюда, чтобы не отправлять состояние судьи всем
     });
 
     startRoundTimer(roomId, false);
